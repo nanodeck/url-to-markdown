@@ -81,8 +81,14 @@ npm run typecheck    # TypeScript check
 ## Docker
 
 ```bash
+docker pull ghcr.io/nanodeck/url-to-markdown:latest
+docker run -p 3333:3333 -e APP_KEY=testtesttesttesttest -e NODE_ENV=production ghcr.io/nanodeck/url-to-markdown:latest
+```
+
+To build locally:
+
+```bash
 docker build -t url-to-markdown:latest .
-docker run -p 3333:3333 -e APP_KEY=testtesttesttesttest -e NODE_ENV=production url-to-markdown:latest
 ```
 
 ## Configuration
