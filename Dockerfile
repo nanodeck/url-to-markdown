@@ -57,6 +57,12 @@ COPY --from=deps /app/node_modules ./node_modules
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3333
+ENV LOG_LEVEL=info
+ENV REQUEST_BODY_LIMIT=5mb
+ENV RATE_LIMIT_REQUESTS=60
+ENV RATE_LIMIT_DURATION="1 minute"
+ENV RATE_LIMIT_BLOCK_FOR="5 minutes"
+ENV LIMITER_STORE=memory
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://localhost:3333/health').then(r=>{if(!r.ok)throw r.status}).catch(()=>process.exit(1))"

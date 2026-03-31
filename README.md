@@ -5,10 +5,10 @@ Convert web pages to clean Markdown using Playwright and Chromium.
 ## Quickstart
 
 ```bash
-npm install
-cp .env.example .env
-# Generate APP_KEY: node ace generate:key
-npm run dev
+docker run \
+  -p 3333:3333 \
+  -e APP_KEY=testtesttesttesttest \
+  ghcr.io/nanodeck/url-to-markdown:latest
 ```
 
 ## API
