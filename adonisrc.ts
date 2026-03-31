@@ -22,7 +22,11 @@ export default defineConfig({
     () => import('@foadonis/openapi/openapi_provider'),
   ],
 
-  preloads: [() => import('#start/routes'), () => import('#start/kernel'), () => import('#start/browser')],
+  preloads: [
+    () => import('#start/routes'),
+    () => import('#start/kernel'),
+    () => import('#start/browser'),
+  ],
 
   metaFiles: [
     {

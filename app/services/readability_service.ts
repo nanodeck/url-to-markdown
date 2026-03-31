@@ -46,19 +46,33 @@ export class ReadabilityService {
     }
   }
 
-  private extractTitle(document: { querySelector(selector: string): { textContent: string | null } | null }): string | null {
+  private extractTitle(document: {
+    querySelector(selector: string): { textContent: string | null } | null
+  }): string | null {
     const titleEl = document.querySelector('title')
     return titleEl?.textContent?.trim() || null
   }
 
-  private extractLinks(document: { querySelectorAll(selector: string): Iterable<{ getAttribute(name: string): string | null; textContent: string | null }> }, baseUrl: string): ExtractedLink[] {
+  private extractLinks(
+    document: {
+      querySelectorAll(
+        selector: string
+      ): Iterable<{ getAttribute(name: string): string | null; textContent: string | null }>
+    },
+    baseUrl: string
+  ): ExtractedLink[] {
     const anchors = document.querySelectorAll('a[href]')
     const links: ExtractedLink[] = []
     const baseHostname = new URL(baseUrl).hostname
 
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')
-      if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) {
+      if (
+        !href ||
+        href.startsWith('#') ||
+        href.startsWith('javascript:') ||
+        href.startsWith('mailto:')
+      ) {
         continue
       }
 

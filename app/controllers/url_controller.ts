@@ -1,7 +1,13 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
 import { urlQueryValidator } from '#validators/url'
-import { UrlToMarkdownResponse, UrlErrorResponse, UrlValidationErrorResponse, SCREENSHOT_DEFAULT_WIDTH, SCREENSHOT_DEFAULT_HEIGHT } from '#schemas/url'
+import {
+  UrlToMarkdownResponse,
+  UrlErrorResponse,
+  UrlValidationErrorResponse,
+  SCREENSHOT_DEFAULT_WIDTH,
+  SCREENSHOT_DEFAULT_HEIGHT,
+} from '#schemas/url'
 import browserService, { type ScreenshotOptions } from '#services/browser_service'
 import readabilityService from '#services/readability_service'
 import markdownService from '#services/markdown_service'
@@ -13,12 +19,42 @@ export default class UrlController {
     summary: 'Convert URL to Markdown',
     description: 'Fetch a web page, extract its main content, and return it as Markdown.',
   })
-  @ApiQuery({ name: 'url', required: true, type: String, description: 'URL to convert to Markdown' })
-  @ApiQuery({ name: 'browser', required: false, type: Boolean, description: 'Use headless Chromium for JS-rendered pages' })
-  @ApiQuery({ name: 'selector', required: false, type: String, description: 'CSS selector to extract specific content (skips Readability)' })
-  @ApiQuery({ name: 'screenshot', required: false, type: Boolean, description: 'Capture a PNG screenshot of the page' })
-  @ApiQuery({ name: 'screenshot_width', required: false, type: Number, description: 'Screenshot viewport width in pixels (default: 1280, max: 1920)' })
-  @ApiQuery({ name: 'screenshot_height', required: false, type: Number, description: 'Screenshot viewport height in pixels (default: 720, max: 1080)' })
+  @ApiQuery({
+    name: 'url',
+    required: true,
+    type: String,
+    description: 'URL to convert to Markdown',
+  })
+  @ApiQuery({
+    name: 'browser',
+    required: false,
+    type: Boolean,
+    description: 'Use headless Chromium for JS-rendered pages',
+  })
+  @ApiQuery({
+    name: 'selector',
+    required: false,
+    type: String,
+    description: 'CSS selector to extract specific content (skips Readability)',
+  })
+  @ApiQuery({
+    name: 'screenshot',
+    required: false,
+    type: Boolean,
+    description: 'Capture a PNG screenshot of the page',
+  })
+  @ApiQuery({
+    name: 'screenshot_width',
+    required: false,
+    type: Number,
+    description: 'Screenshot viewport width in pixels (default: 1280, max: 1920)',
+  })
+  @ApiQuery({
+    name: 'screenshot_height',
+    required: false,
+    type: Number,
+    description: 'Screenshot viewport height in pixels (default: 720, max: 1080)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Markdown conversion result',
@@ -51,10 +87,17 @@ export default class UrlController {
     }
 
     const startedAt = Date.now()
-    const screenshotOpts = this.buildScreenshotOptions(!!payload.screenshot, payload.screenshot_width, payload.screenshot_height)
+    const screenshotOpts = this.buildScreenshotOptions(
+      !!payload.screenshot,
+      payload.screenshot_width,
+      payload.screenshot_height
+    )
     const useBrowser = !!payload.browser || !!screenshotOpts
 
-    logger.info({ url: payload.url, browser: useBrowser, screenshot: !!screenshotOpts }, 'url:request received')
+    logger.info(
+      { url: payload.url, browser: useBrowser, screenshot: !!screenshotOpts },
+      'url:request received'
+    )
 
     const fetchResult = await this.fetchUrl(payload.url, useBrowser, screenshotOpts, logger)
     if ('error' in fetchResult) {
@@ -75,7 +118,12 @@ export default class UrlController {
     const markdown = markdownService.convert(extracted.content)
 
     logger.info(
-      { durationMs: Date.now() - startedAt, url: finalUrl, markdownLength: markdown.length, linksCount: extracted.links.length },
+      {
+        durationMs: Date.now() - startedAt,
+        url: finalUrl,
+        markdownLength: markdown.length,
+        linksCount: extracted.links.length,
+      },
       'url:request completed'
     )
 
@@ -93,7 +141,11 @@ export default class UrlController {
     return response.send(result)
   }
 
-  private buildScreenshotOptions(enabled: boolean, width?: number, height?: number): ScreenshotOptions | undefined {
+  private buildScreenshotOptions(
+    enabled: boolean,
+    width?: number,
+    height?: number
+  ): ScreenshotOptions | undefined {
     if (!enabled) {
       return undefined
     }
@@ -108,7 +160,10 @@ export default class UrlController {
     useBrowser: boolean,
     screenshot: ScreenshotOptions | undefined,
     logger: import('@adonisjs/core/logger').Logger
-  ): Promise<{ html: string; status: number; finalUrl: string; screenshot: string | null } | { error: string; status: number }> {
+  ): Promise<
+    | { html: string; status: number; finalUrl: string; screenshot: string | null }
+    | { error: string; status: number }
+  > {
     try {
       if (useBrowser) {
         return await browserService.fetchPage(url, screenshot)

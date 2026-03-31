@@ -7,7 +7,13 @@ const BLOCKED_PROTOCOLS = new Set(['file:', 'data:', 'ftp:', 'gopher:'])
 const PRIVATE_RANGES = [
   // IPv4
   { prefix: '10.', mask: null },
-  { prefix: '172.', mask: (ip: string) => { const b = Number.parseInt(ip.split('.')[1], 10); return b >= 16 && b <= 31 } },
+  {
+    prefix: '172.',
+    mask: (ip: string) => {
+      const b = Number.parseInt(ip.split('.')[1], 10)
+      return b >= 16 && b <= 31
+    },
+  },
   { prefix: '192.168.', mask: null },
   { prefix: '127.', mask: null },
   { prefix: '169.254.', mask: null },

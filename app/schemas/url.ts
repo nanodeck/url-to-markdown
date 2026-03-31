@@ -30,24 +30,50 @@ export class UrlLink {
   @ApiProperty({ type: String, example: 'About Us' })
   declare text: string
 
-  @ApiProperty({ required: false, type: String, example: 'nofollow', description: 'Value of the rel attribute, if present' })
+  @ApiProperty({
+    required: false,
+    type: String,
+    example: 'nofollow',
+    description: 'Value of the rel attribute, if present',
+  })
   declare rel: string | null
 }
 
 export class UrlToMarkdownResponse {
-  @ApiProperty({ type: String, example: 'https://example.com/article', description: 'Final URL (after redirects)' })
+  @ApiProperty({
+    type: String,
+    example: 'https://example.com/article',
+    description: 'Final URL (after redirects)',
+  })
   declare url: string
 
-  @ApiProperty({ required: false, type: String, example: 'Article Title', description: 'Page title' })
+  @ApiProperty({
+    required: false,
+    type: String,
+    example: 'Article Title',
+    description: 'Page title',
+  })
   declare title: string | null
 
-  @ApiProperty({ type: String, example: '# Article Title\n\nContent here...', description: 'Markdown content' })
+  @ApiProperty({
+    type: String,
+    example: '# Article Title\n\nContent here...',
+    description: 'Markdown content',
+  })
   declare markdown: string
 
-  @ApiProperty({ type: [UrlLink], description: 'Same-domain links found on the page, resolved to absolute URLs (external links are excluded)' })
+  @ApiProperty({
+    type: [UrlLink],
+    description:
+      'Same-domain links found on the page, resolved to absolute URLs (external links are excluded)',
+  })
   declare links: UrlLink[]
 
-  @ApiProperty({ required: false, type: String, description: 'Base64-encoded PNG screenshot of the page (present when screenshot=true)' })
+  @ApiProperty({
+    required: false,
+    type: String,
+    description: 'Base64-encoded PNG screenshot of the page (present when screenshot=true)',
+  })
   declare screenshot: string | null
 }
 
