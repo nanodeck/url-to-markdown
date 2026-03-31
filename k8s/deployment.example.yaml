@@ -1,0 +1,109 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: url-to-markdown
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: url-to-markdown
+  namespace: url-to-markdown
+type: Opaque
+stringData:
+  APP_KEY: "CHANGE-ME-generate-with-node-ace-generate-key"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: url-to-markdown
+  namespace: url-to-markdown
+data:
+  NODE_ENV: "production"
+  HOST: "0.0.0.0"
+  PORT: "3333"
+  LOG_LEVEL: "info"
+  TZ: "UTC"
+  APP_URL: "https://url-to-markdown.example.com"
+  APP_NAME: "url-to-markdown"
+  APP_VERSION: "1.0.0"
+  REQUEST_BODY_LIMIT: "5mb"
+  RATE_LIMIT_REQUESTS: "60"
+  RATE_LIMIT_DURATION: "1 minute"
+  RATE_LIMIT_BLOCK_FOR: "5 minutes"
+  LIMITER_STORE: "memory"
+  URL_TIMEOUT_MS: "30000"
+  URL_NAVIGATION_TIMEOUT_MS: "30000"
+  URL_VIEWPORT_WIDTH: "1280"
+  URL_VIEWPORT_HEIGHT: "720"
+  URL_WAIT_UNTIL: "load"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-to-markdown
+  namespace: url-to-markdown
+  labels:
+    app: url-to-markdown
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: url-to-markdown
+  template:
+    metadata:
+      labels:
+        app: url-to-markdown
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: url-to-markdown
+          image: ghcr.io/nanodeck/url-to-markdown:<version>
+          ports:
+            - containerPort: 3333
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: url-to-markdown
+            - secretRef:
+                name: url-to-markdown
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3333
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3333
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: url-to-markdown
+  namespace: url-to-markdown
+spec:
+  selector:
+    app: url-to-markdown
+  ports:
+    - port: 80
+      targetPort: 3333
+      protocol: TCP
+  type: ClusterIP

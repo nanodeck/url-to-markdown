@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>URL to Markdown</title>
+    <style>
+      :root { color-scheme: light dark; }
+      * { margin: 0; box-sizing: border-box; }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        background: #0c0c18;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+        background-size: 24px 24px;
+        color: #f0f0f0;
+        font-family: "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        overflow: hidden;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .circle {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.2;
+      }
+      .circle-1 {
+        width: 900px;
+        height: 900px;
+        top: -60px;
+        left: 20%;
+        background: #0d9668;
+        animation: float1 30s linear infinite;
+      }
+      .circle-2 {
+        width: 840px;
+        height: 840px;
+        bottom: -80px;
+        right: 10%;
+        background: #2563eb;
+        animation: float2 40s linear infinite;
+      }
+      .circle-3 {
+        width: 680px;
+        height: 680px;
+        top: 60%;
+        left: -40px;
+        background: #7c3aed;
+        animation: float3 35s linear infinite;
+      }
+
+      @keyframes float1 {
+        0%, 100% { transform: translate(0, -80px) scale(1); }
+        25%      { transform: translate(80px, 0) scale(1.1); }
+        50%      { transform: translate(0, 80px) scale(1); }
+        75%      { transform: translate(-80px, 0) scale(0.9); }
+      }
+      @keyframes float2 {
+        0%, 100% { transform: translate(100px, 0) scale(1); }
+        25%      { transform: translate(0, 100px) scale(0.9); }
+        50%      { transform: translate(-100px, 0) scale(1.1); }
+        75%      { transform: translate(0, -100px) scale(1); }
+      }
+      @keyframes float3 {
+        0%, 100% { transform: translate(-70px, 0) scale(1.1); }
+        25%      { transform: translate(0, -70px) scale(1); }
+        50%      { transform: translate(70px, 0) scale(0.9); }
+        75%      { transform: translate(0, 70px) scale(1); }
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+        padding: 24px;
+      }
+
+      .logo {
+        position: relative;
+        width: clamp(140px, 28vw, 200px);
+        aspect-ratio: 1;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #0d9668);
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 10%;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      .logo .url {
+        position: absolute;
+        top: 10%;
+        left: 10%;
+        font-size: clamp(0.75rem, 2vw, 1rem);
+        color: #000;
+      }
+      .logo .md {
+        font-size: clamp(2.2rem, 6vw, 3.2rem);
+        color: #fff;
+        line-height: 1;
+      }
+
+      .docs-btn {
+        display: inline-block;
+        padding: 12px 32px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        color: #93c5fd;
+        border: 1.5px solid #93c5fd;
+        background: transparent;
+        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      }
+      .docs-btn:hover {
+        background: rgba(147, 197, 253, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+
+      @media (prefers-color-scheme: light) {
+        body {
+          background: #f5faf7;
+          background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+          background-size: 24px 24px;
+          color: #111;
+        }
+        body::after {
+          background: radial-gradient(ellipse at center, transparent 40%, rgba(255, 255, 255, 0.5) 100%);
+        }
+        .circle-1 { background: #34d399; opacity: 0.18; }
+        .circle-2 { background: #60a5fa; opacity: 0.18; }
+        .circle-3 { background: #a78bfa; opacity: 0.18; }
+        .docs-btn { color: #3b82f6; border-color: #3b82f6; }
+        .docs-btn:hover { background: rgba(59, 130, 246, 0.08); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+    <div class="wrap">
+      <div class="logo"><span class="url">URL</span><span class="md">MD</span></div>
+      <a class="docs-btn" href="{{ docsPath }}">Docs</a>
+    </div>
+  </body>
+</html>
