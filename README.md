@@ -130,14 +130,6 @@ All config is env-driven. See `.env.example` for available settings.
 | `URL_VIEWPORT_HEIGHT`      | `720`   | Default browser viewport height          |
 | `URL_WAIT_UNTIL`           | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`) |
 
-### Observability
-
-| Variable                      | Default            | Description                     |
-|-------------------------------|--------------------|---------------------------------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | —                  | OpenTelemetry collector endpoint |
-| `OTEL_EXPORTER_OTLP_HEADERS`  | —                  | OTLP exporter headers           |
-| `OTEL_SERVICE_NAME`           | `url-to-markdown`  | OTLP service name               |
-
 ## License
 
 MIT
