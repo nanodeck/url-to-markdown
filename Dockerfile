@@ -45,6 +45,7 @@ RUN addgroup -g 1000 node && adduser -u 1000 -G node -s /bin/false -D node \
   && rm -rf /usr/lib/libLLVM*.so* /usr/lib/libgallium*.so \
             /usr/lib/python3.12 /usr/lib/libpython3*
 
+COPY --from=fonts /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=fonts /usr/share/fonts/truetype/msttcorefonts /usr/share/fonts/truetype/msttcorefonts
 RUN fc-cache -f
 
@@ -60,7 +61,8 @@ ENV NODE_ENV=production \
     RATE_LIMIT_DURATION="1 minute" \
     RATE_LIMIT_BLOCK_FOR="5 minutes" \
     LIMITER_STORE=memory \
-    CHROMIUM_PATH=/usr/bin/chromium-browser
+    CHROMIUM_PATH=/usr/bin/chromium-browser \
+    NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://localhost:3333/health').then(r=>{if(!r.ok)throw r.status}).catch(()=>process.exit(1))"
