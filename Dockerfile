@@ -1,18 +1,16 @@
-FROM node:20-bookworm-slim AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --omit=dev
 
-FROM node:20-bookworm-slim AS build
+FROM node:24-alpine AS build
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY . .
 RUN npm run build
-
-FROM node:22-alpine AS node-bin
 
 FROM node:20-bookworm-slim AS fonts
 RUN sed -i 's/^Components: main$/Components: main contrib/' /etc/apt/sources.list.d/debian.sources \
@@ -29,30 +27,25 @@ LABEL org.opencontainers.image.source="https://github.com/nanodeck/url-to-markdo
 
 WORKDIR /app
 
-# Copy only the Node.js binary (no npm — eliminates bundled npm vulnerabilities)
-COPY --from=node-bin /usr/local/bin/node /usr/local/bin/node
+COPY --from=build /usr/local/bin/node /usr/local/bin/node
 
-# Create non-root user, upgrade base packages, and install Chromium, fonts, and tini
 RUN addgroup -g 1000 node && adduser -u 1000 -G node -s /bin/false -D node \
   && apk upgrade --no-cache \
   && apk add --no-cache \
   libstdc++ \
   chromium \
   font-liberation \
-  font-noto \
-  font-noto-cjk \
-  font-noto-emoji \
   fontconfig \
   freetype \
   harfbuzz \
   nss \
-  tini
+  tini \
+  && rm -rf /usr/lib/libLLVM*.so* /usr/lib/libgallium*.so \
+            /usr/lib/python3.12 /usr/lib/libpython3*
 
-# Copy Microsoft Core Fonts from Debian-based stage (avoids flaky SourceForge downloads on Alpine)
 COPY --from=fonts /usr/share/fonts/truetype/msttcorefonts /usr/share/fonts/truetype/msttcorefonts
 RUN fc-cache -f
 
-# Copy build output directly into /app
 COPY --from=build /app/build/ ./
 COPY --from=deps /app/node_modules ./node_modules
 

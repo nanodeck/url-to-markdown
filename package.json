@@ -54,7 +54,6 @@
   "dependencies": {
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/limiter": "^2.4.0",
-    "@adonisjs/otel": "1.2.0",
     "@foadonis/openapi": "^0.5.1",
     "@mozilla/readability": "^0.6.0",
     "@truto/turndown-plugin-gfm": "^1.0.2",
