@@ -100,8 +100,34 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
-  release:
+  helm:
     needs: [test, docker]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package chart
+        run: |
+          VERSION=$(grep '^version:' charts/url-to-markdown/Chart.yaml | awk '{print $2}')
+          APP_VERSION=${{ github.ref_name }}
+          helm package charts/url-to-markdown --version "$VERSION" --app-version "$APP_VERSION"
+
+      - name: Push chart to GHCR
+        run: |
+          VERSION=$(grep '^version:' charts/url-to-markdown/Chart.yaml | awk '{print $2}')
+          helm push url-to-markdown-${VERSION}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+
+  release:
+    needs: [test, docker, helm]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
