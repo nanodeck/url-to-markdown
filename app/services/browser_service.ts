@@ -1,5 +1,6 @@
 import env from '#start/env'
-import { chromium, type Browser } from 'playwright'
+import { chromium, type Browser } from 'patchright'
+import { stealthScript, CHROME_UA } from '#services/stealth'
 
 export type ScreenshotOptions = {
   width: number
@@ -54,6 +55,7 @@ export class BrowserService {
   async fetchPage(url: string, screenshot?: ScreenshotOptions): Promise<FetchResult> {
     const browser = await this.getBrowser()
     const page = await browser.newPage({
+      userAgent: CHROME_UA,
       viewport: {
         width: screenshot?.width ?? env.get('URL_VIEWPORT_WIDTH', 1280),
         height: screenshot?.height ?? env.get('URL_VIEWPORT_HEIGHT', 720),
@@ -62,6 +64,7 @@ export class BrowserService {
 
     page.setDefaultTimeout(env.get('URL_TIMEOUT_MS', 30_000))
     page.setDefaultNavigationTimeout(env.get('URL_NAVIGATION_TIMEOUT_MS', 30_000))
+    await page.addInitScript(stealthScript)
 
     try {
       const response = await page.goto(url, {
