@@ -80,7 +80,7 @@ export class ReadabilityService {
       }
 
       try {
-        const parsed = new URL(href, baseUrl)
+        const parsed = new URL(href!, baseUrl)
         if (parsed.hostname !== baseHostname) {
           continue
         }
