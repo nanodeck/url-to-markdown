@@ -59,7 +59,8 @@ ENV NODE_ENV=production \
     RATE_LIMIT_REQUESTS=60 \
     RATE_LIMIT_DURATION="1 minute" \
     RATE_LIMIT_BLOCK_FOR="5 minutes" \
-    LIMITER_STORE=memory
+    LIMITER_STORE=memory \
+    CHROMIUM_PATH=/usr/bin/chromium-browser
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://localhost:3333/health').then(r=>{if(!r.ok)throw r.status}).catch(()=>process.exit(1))"

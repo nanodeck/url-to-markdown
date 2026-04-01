@@ -19,7 +19,10 @@ export class BrowserService {
 
   private async launchBrowser(): Promise<Browser> {
     try {
-      return await chromium.launch()
+      return await chromium.launch({
+        executablePath: process.env.CHROMIUM_PATH || undefined,
+        args: process.env.CHROMIUM_PATH ? ['--no-sandbox', '--disable-gpu'] : [],
+      })
     } catch (error) {
       const message =
         error instanceof Error
