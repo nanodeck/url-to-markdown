@@ -22,6 +22,11 @@ RUN sed -i 's/^Components: main$/Components: main contrib/' /etc/apt/sources.lis
   && rm -rf /var/lib/apt/lists/*
 
 FROM alpine:3.23 AS runtime
+
+LABEL org.opencontainers.image.source="https://github.com/nanodeck/url-to-markdown" \
+      org.opencontainers.image.description="Convert any URL to Markdown" \
+      org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 # Copy only the Node.js binary (no npm — eliminates bundled npm vulnerabilities)
