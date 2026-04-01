@@ -1,0 +1,50 @@
+# Argo CD - deploy url-to-markdown Helm chart from OCI registry
+#
+# Prerequisites:
+#   - Argo CD installed on the cluster
+#   - Create the target namespace and APP_KEY secret:
+#     kubectl create namespace url-to-markdown
+#     kubectl create secret generic url-to-markdown-app-key \
+#       -n url-to-markdown \
+#       --from-literal=appKey=$(openssl rand -base64 32)
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: url-to-markdown
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: url-to-markdown
+    repoURL: ghcr.io/nanodeck/charts
+    targetRevision: "0.1.0"
+    helm:
+      valuesObject:
+        replicaCount: 2
+        appKey: "" # set via secret below or use Argo CD secret management
+        autoscaling:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 10
+          targetCPUUtilizationPercentage: 60
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: "2"
+            memory: 2Gi
+        config:
+          APP_URL: "https://url-to-markdown.example.com"
+          LOG_LEVEL: warn
+          RATE_LIMIT_REQUESTS: "120"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: url-to-markdown
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

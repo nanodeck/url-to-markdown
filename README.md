@@ -151,7 +151,7 @@ docker build -t url-to-markdown:latest .
 ## Helm Chart (Kubernetes)
 
 ```bash
-helm install url-to-markdown charts/url-to-markdown \
+helm install url-to-markdown oci://ghcr.io/nanodeck/charts/url-to-markdown --version 0.1.0 \
   -n url-to-markdown --create-namespace \
   --set appKey=$(openssl rand -base64 32)
 ```
@@ -159,17 +159,17 @@ helm install url-to-markdown charts/url-to-markdown \
 With a custom values file:
 
 ```bash
-helm install url-to-markdown charts/url-to-markdown \
+helm install url-to-markdown oci://ghcr.io/nanodeck/charts/url-to-markdown --version 0.1.0 \
   -n url-to-markdown --create-namespace \
-  -f k8s/helm-example.yaml
+  -f k8s/helm-values-example.yaml
 ```
 
-The chart includes: Deployment, Service, ConfigMap, Secret, ServiceAccount, and an optional HorizontalPodAutoscaler. See [values.yaml](charts/url-to-markdown/values.yaml) for all configurable options and [k8s/helm-example.yaml](k8s/helm-example.yaml) for a production-like example.
+The chart includes: Deployment, Service, ConfigMap, Secret, ServiceAccount, and an optional HorizontalPodAutoscaler. See [values.yaml](charts/url-to-markdown/values.yaml) for all configurable options and [k8s/helm-values-example.yaml](k8s/helm-values-example.yaml) for a production-like example.
 
 To enable autoscaling:
 
 ```bash
-helm install url-to-markdown charts/url-to-markdown \
+helm install url-to-markdown oci://ghcr.io/nanodeck/charts/url-to-markdown --version 0.1.0 \
   -n url-to-markdown --create-namespace \
   --set appKey=$(openssl rand -base64 32) \
   --set autoscaling.enabled=true \
