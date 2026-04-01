@@ -198,6 +198,12 @@ npm run lint         # ESLint
 npm run typecheck    # TypeScript check
 ```
 
+## Also by Nanodeck
+
+| Project | Description |
+|---------|-------------|
+| [html-to-pdf](https://github.com/nanodeck/html-to-pdf) | Self-hosted API to convert HTML to high-quality PDF documents using headless Chromium. Supports thumbnails, file storage, and MCP tool for AI agent workflows. |
+
 ## License
 
 MIT
