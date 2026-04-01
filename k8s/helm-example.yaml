@@ -1,0 +1,34 @@
+# Example Helm values for a production-like deployment
+#
+# Install with default values:
+#   helm install url-to-markdown charts/url-to-markdown \
+#     -n url-to-markdown --create-namespace \
+#     --set appKey=$(openssl rand -base64 32)
+#
+# Install with this values file:
+#   helm install url-to-markdown charts/url-to-markdown \
+#     -n url-to-markdown --create-namespace \
+#     -f k8s/helm-example.yaml
+
+appKey: "CHANGE-ME-generate-with-node-ace-generate-key"
+
+replicaCount: 2
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+config:
+  APP_URL: "https://url-to-markdown.example.com"
+  LOG_LEVEL: warn
+  RATE_LIMIT_REQUESTS: "120"
