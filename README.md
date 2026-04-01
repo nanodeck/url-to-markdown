@@ -148,6 +148,37 @@ To build locally:
 docker build -t url-to-markdown:latest .
 ```
 
+## Helm Chart (Kubernetes)
+
+```bash
+helm install url-to-markdown charts/url-to-markdown \
+  -n url-to-markdown --create-namespace \
+  --set appKey=$(openssl rand -base64 32)
+```
+
+With a custom values file:
+
+```bash
+helm install url-to-markdown charts/url-to-markdown \
+  -n url-to-markdown --create-namespace \
+  -f k8s/helm-example.yaml
+```
+
+The chart includes: Deployment, Service, ConfigMap, Secret, ServiceAccount, and an optional HorizontalPodAutoscaler. See [values.yaml](charts/url-to-markdown/values.yaml) for all configurable options and [k8s/helm-example.yaml](k8s/helm-example.yaml) for a production-like example.
+
+To enable autoscaling:
+
+```bash
+helm install url-to-markdown charts/url-to-markdown \
+  -n url-to-markdown --create-namespace \
+  --set appKey=$(openssl rand -base64 32) \
+  --set autoscaling.enabled=true \
+  --set autoscaling.minReplicas=2 \
+  --set autoscaling.maxReplicas=10
+```
+
+A raw manifest example (without Helm) is also available at [k8s/deployment.example.yaml](k8s/deployment.example.yaml).
+
 ## Configuration
 
 All config is env-driven. See `.env.example` for available settings.

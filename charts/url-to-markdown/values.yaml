@@ -1,0 +1,58 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/nanodeck/url-to-markdown
+  tag: "" # defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3333
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# Required - must be set by user
+appKey: ""
+
+# App config (maps to ConfigMap)
+config:
+  NODE_ENV: production
+  HOST: "0.0.0.0"
+  PORT: "3333"
+  LOG_LEVEL: info
+  TZ: UTC
+  APP_URL: ""
+  APP_NAME: url-to-markdown
+  APP_VERSION: ""
+  REQUEST_BODY_LIMIT: 5mb
+  RATE_LIMIT_REQUESTS: "60"
+  RATE_LIMIT_DURATION: "1 minute"
+  RATE_LIMIT_BLOCK_FOR: "5 minutes"
+  LIMITER_STORE: memory
+  URL_TIMEOUT_MS: "30000"
+  URL_NAVIGATION_TIMEOUT_MS: "30000"
+  URL_VIEWPORT_WIDTH: "1280"
+  URL_VIEWPORT_HEIGHT: "720"
+  URL_WAIT_UNTIL: load
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
