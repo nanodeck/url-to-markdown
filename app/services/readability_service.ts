@@ -67,11 +67,14 @@ export class ReadabilityService {
 
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')
+      const normalizedHref = href ? href.trim().toLowerCase() : null
       if (
-        !href ||
-        href.startsWith('#') ||
-        href.startsWith('javascript:') ||
-        href.startsWith('mailto:')
+        !normalizedHref ||
+        normalizedHref.startsWith('#') ||
+        normalizedHref.startsWith('javascript:') ||
+        normalizedHref.startsWith('data:') ||
+        normalizedHref.startsWith('vbscript:') ||
+        normalizedHref.startsWith('mailto:')
       ) {
         continue
       }
