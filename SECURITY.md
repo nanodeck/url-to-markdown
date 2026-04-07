@@ -4,7 +4,7 @@
 
 Please report security issues privately.
 
-Email: security@yourdomain.com
+Email: egorovpasha@gmail.com
 
 Include:
 - A description of the issue
