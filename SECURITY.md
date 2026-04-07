@@ -4,7 +4,7 @@
 
 Please report security issues privately.
 
-Email: egorovpasha@gmail.com
+egorovpasha ﹫ (google mail)
 
 Include:
 - A description of the issue
