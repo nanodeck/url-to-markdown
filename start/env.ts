@@ -34,4 +34,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   URL_VIEWPORT_WIDTH: Env.schema.number.optional(),
   URL_VIEWPORT_HEIGHT: Env.schema.number.optional(),
   URL_WAIT_UNTIL: Env.schema.enum.optional(['load', 'domcontentloaded', 'networkidle'] as const),
+
+  SSRF_ALLOWED_CIDRS: Env.schema.string.optional(),
+  SSRF_ALLOWED_HOSTS: Env.schema.string.optional(),
 })

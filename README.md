@@ -14,12 +14,13 @@ Self-hosted API to convert any web page to clean Markdown. Handles JavaScript-re
 ## Features
 
 - **HTML to Markdown conversion** — fetches any URL and returns clean Markdown using Readability and Turndown
+- **PDF to Markdown conversion** — automatically detects PDF URLs and converts them to Markdown, with optional per-page PNG screenshots
 - **JavaScript rendering** — headless Chromium via Patchright for JS-heavy and single-page apps
 - **Bot detection evasion** — stealth patches to bypass Cloudflare, DataDome, and other anti-bot systems
 - **Screenshot capture** — full-page PNG screenshots with configurable viewport
 - **CSS selector extraction** — target specific page elements instead of full-page conversion
 - **Link extraction** — returns all same-domain links as structured data
-- **SSRF protection** — blocks requests to private IPs and internal networks
+- **SSRF protection** — blocks requests to private IPs and internal networks, with configurable CIDR and hostname allowlists for cluster-internal services
 - **Rate limiting** — built-in configurable rate limiter
 - **OpenAPI documentation** — interactive Scalar UI at `/api`
 - **Multi-arch Docker image** — linux/amd64 and linux/arm64
@@ -62,6 +63,8 @@ docker run \
   -e URL_VIEWPORT_WIDTH=1280 \
   -e URL_VIEWPORT_HEIGHT=720 \
   -e URL_WAIT_UNTIL=load \
+  -e SSRF_ALLOWED_CIDRS=10.96.0.0/12 \
+  -e SSRF_ALLOWED_HOSTS=pdf-store.internal.svc.cluster.local \
   ghcr.io/nanodeck/url-to-markdown:latest
 ```
 
@@ -85,11 +88,11 @@ Convert a web page to clean Markdown.
 | `url`              | yes      | —       | URL to convert                                                |
 | `browser`          | no       | `false` | Use headless Chromium for JS-rendered pages                   |
 | `selector`         | no       | —       | CSS selector to extract specific content (skips Readability)  |
-| `screenshot`       | no       | `false` | Capture a PNG screenshot (implies `browser=true`)             |
+| `screenshot`       | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders each page for PDFs) |
 | `screenshot_width` | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)               |
-| `screenshot_height`| no       | `720`   | Screenshot viewport height in pixels (max: 1080)              |
+| `screenshot_height`| no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs) |
 
-**Example**
+**Example — HTML**
 
 ```bash
 curl 'http://localhost:3333/api/fetch?url=https://example.com'
@@ -106,20 +109,54 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com'
 }
 ```
 
+**Example — PDF**
+
+```bash
+curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf'
+```
+
+```json
+{
+  "url": "https://example.com/report.pdf",
+  "title": null,
+  "markdown": "# Report Title\n\nExtracted text from the PDF...",
+  "links": []
+}
+```
+
+With per-page screenshots:
+
+```bash
+curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screenshot=true'
+```
+
+```json
+{
+  "url": "https://example.com/report.pdf",
+  "title": null,
+  "markdown": "...",
+  "links": [],
+  "screenshots": ["iVBORw0KGgo...(base64 PNG page 1)", "iVBORw0KGgo...(page 2)"]
+}
+```
+
 **Response Codes**
 
 | Status | Description |
 |--------|-------------|
-| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` |
+| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` (HTML) or `screenshots` (PDF) |
 | 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected |
+| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF resource |
 | 422    | Validation error — missing or invalid `url` parameter |
 | 4xx    | Upstream non-success status forwarded from the target URL |
 | 502    | Connection failure — DNS error, timeout, or unreachable host |
 
 **Notes**
+- Content type is auto-detected via HEAD request, with magic-byte sniffing as fallback for `application/octet-stream` responses
 - `links` contains same-domain links only (external links are excluded), resolved to absolute URLs
-- `screenshot` is a base64-encoded PNG, only present when `screenshot=true`
-- `title` may be `null` if the page has no title element
+- `screenshot` (singular) is a base64-encoded PNG for HTML pages, only present when `screenshot=true`
+- `screenshots` (plural) is an array of base64-encoded PNGs for PDF pages, only present when `screenshot=true` on a PDF URL
+- `title` may be `null` (always `null` for PDFs)
 
 ## Bot Detection Evasion
 
@@ -207,6 +244,15 @@ All config is env-driven. See `.env.example` for available settings.
 | `RATE_LIMIT_DURATION` | `1 minute`   | Rate limit window duration           |
 | `RATE_LIMIT_BLOCK_FOR`| `5 minutes`  | Block duration after limit exceeded  |
 | `LIMITER_STORE`       | `memory`     | Limiter backend (`memory`)           |
+
+### SSRF Protection
+
+| Variable             | Default | Description                              |
+|----------------------|---------|------------------------------------------|
+| `SSRF_ALLOWED_CIDRS` | —       | Comma-separated CIDRs to exempt from private-IP blocking (e.g., `10.96.0.0/12,10.244.0.0/16`) |
+| `SSRF_ALLOWED_HOSTS` | —       | Comma-separated hostnames to exempt from SSRF checks (e.g., `pdf-store.ns.svc.cluster.local`) |
+
+By default, all private/internal IP ranges are blocked. When deploying in Kubernetes, cluster service IPs often fall in private ranges (e.g., `10.96.0.0/12`). Use these env vars to allow access to trusted internal services while keeping SSRF protection for everything else. Protocol blocks (`file:`, `data:`, `ftp:`, `gopher:`) are never bypassed by allowlists.
 
 ### Browser / Fetch
 

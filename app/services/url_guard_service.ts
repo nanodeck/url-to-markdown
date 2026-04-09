@@ -40,7 +40,75 @@ function isPrivateIP(ip: string): boolean {
   return false
 }
 
+function parseCidr(cidr: string): { network: number; mask: number } | null {
+  const parts = cidr.split('/')
+  if (parts.length !== 2) return null
+
+  const octets = parts[0].split('.')
+  if (octets.length !== 4) return null
+
+  const bits = Number.parseInt(parts[1], 10)
+  if (Number.isNaN(bits) || bits < 0 || bits > 32) return null
+
+  const ip =
+    ((Number.parseInt(octets[0], 10) << 24) |
+      (Number.parseInt(octets[1], 10) << 16) |
+      (Number.parseInt(octets[2], 10) << 8) |
+      Number.parseInt(octets[3], 10)) >>>
+    0
+
+  const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0
+
+  return { network: (ip & mask) >>> 0, mask }
+}
+
+function ipToInt(ip: string): number {
+  const octets = ip.split('.')
+  if (octets.length !== 4) return -1
+  return (
+    ((Number.parseInt(octets[0], 10) << 24) |
+      (Number.parseInt(octets[1], 10) << 16) |
+      (Number.parseInt(octets[2], 10) << 8) |
+      Number.parseInt(octets[3], 10)) >>>
+    0
+  )
+}
+
+function parseCommaSeparated(value: string | undefined): string[] {
+  if (!value) return []
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 export class UrlGuardService {
+  private allowedCidrs: Array<{ network: number; mask: number }>
+  private allowedHosts: Set<string>
+
+  constructor(
+    allowedCidrs?: string[],
+    allowedHosts?: string[]
+  ) {
+    this.allowedCidrs = (allowedCidrs ?? [])
+      .map(parseCidr)
+      .filter((c): c is { network: number; mask: number } => c !== null)
+
+    this.allowedHosts = new Set(
+      (allowedHosts ?? []).map((h) => h.toLowerCase())
+    )
+  }
+
+  private isAllowedByCidr(ip: string): boolean {
+    const ipInt = ipToInt(ip)
+    if (ipInt === -1) return false
+    return this.allowedCidrs.some((c) => ((ipInt & c.mask) >>> 0) === c.network)
+  }
+
+  private isAllowedByHost(hostname: string): boolean {
+    return this.allowedHosts.has(hostname.toLowerCase())
+  }
+
   /**
    * Validates that a URL is safe to fetch (not targeting internal resources).
    * Returns an error message if blocked, or null if safe.
@@ -59,9 +127,13 @@ export class UrlGuardService {
 
     const hostname = parsed.hostname
 
+    if (this.isAllowedByHost(hostname)) {
+      return null
+    }
+
     // Check if hostname is a raw IP
     if (isIP(hostname)) {
-      if (isPrivateIP(hostname)) {
+      if (isPrivateIP(hostname) && !this.isAllowedByCidr(hostname)) {
         return 'URLs targeting private/internal IP addresses are not allowed'
       }
       return null
@@ -74,7 +146,7 @@ export class UrlGuardService {
       const all = [...addresses, ...addresses6]
 
       for (const addr of all) {
-        if (isPrivateIP(addr)) {
+        if (isPrivateIP(addr) && !this.isAllowedByCidr(addr)) {
           return 'URLs targeting private/internal IP addresses are not allowed'
         }
       }
@@ -86,6 +158,9 @@ export class UrlGuardService {
   }
 }
 
-const urlGuardService = new UrlGuardService()
+const urlGuardService = new UrlGuardService(
+  parseCommaSeparated(process.env.SSRF_ALLOWED_CIDRS),
+  parseCommaSeparated(process.env.SSRF_ALLOWED_HOSTS)
+)
 
 export default urlGuardService
