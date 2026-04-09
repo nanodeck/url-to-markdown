@@ -7,6 +7,7 @@ Please report security issues privately.
 Email: security@yourdomain.com
 
 Include:
+
 - A description of the issue
 - Steps to reproduce
 - Potential impact

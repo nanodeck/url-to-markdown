@@ -86,23 +86,18 @@ export class UrlGuardService {
   private allowedCidrs: Array<{ network: number; mask: number }>
   private allowedHosts: Set<string>
 
-  constructor(
-    allowedCidrs?: string[],
-    allowedHosts?: string[]
-  ) {
+  constructor(allowedCidrs?: string[], allowedHosts?: string[]) {
     this.allowedCidrs = (allowedCidrs ?? [])
       .map(parseCidr)
       .filter((c): c is { network: number; mask: number } => c !== null)
 
-    this.allowedHosts = new Set(
-      (allowedHosts ?? []).map((h) => h.toLowerCase())
-    )
+    this.allowedHosts = new Set((allowedHosts ?? []).map((h) => h.toLowerCase()))
   }
 
   private isAllowedByCidr(ip: string): boolean {
     const ipInt = ipToInt(ip)
     if (ipInt === -1) return false
-    return this.allowedCidrs.some((c) => ((ipInt & c.mask) >>> 0) === c.network)
+    return this.allowedCidrs.some((c) => (ipInt & c.mask) >>> 0 === c.network)
   }
 
   private isAllowedByHost(hostname: string): boolean {

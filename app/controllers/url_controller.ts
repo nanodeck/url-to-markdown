@@ -103,7 +103,10 @@ export default class UrlController {
       contentType = await contentTypeService.detect(payload.url, { validateUrl })
     } catch (error) {
       if (error instanceof SsrfRedirectError) {
-        logger.info({ url: payload.url, blockedUrl: error.blockedUrl }, 'url:blocked by SSRF guard (redirect)')
+        logger.info(
+          { url: payload.url, blockedUrl: error.blockedUrl },
+          'url:blocked by SSRF guard (redirect)'
+        )
         return response.status(403).send({ error: error.message, status: 403 })
       }
       throw error
