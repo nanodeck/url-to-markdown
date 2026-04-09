@@ -70,11 +70,11 @@ docker run \
 
 ## API
 
-| Method | Path       | Description         |
-| ------ | ---------- | ------------------- |
-| GET    | `/`        | Landing page        |
-| GET    | `/health`  | Health check        |
-| GET    | `/api`     | OpenAPI / Scalar UI |
+| Method | Path         | Description             |
+| ------ | ------------ | ----------------------- |
+| GET    | `/`          | Landing page            |
+| GET    | `/health`    | Health check            |
+| GET    | `/api`       | OpenAPI / Scalar UI     |
 | GET    | `/api/fetch` | Convert URL to Markdown |
 
 ### GET /api/fetch
@@ -83,14 +83,14 @@ Convert a web page to clean Markdown.
 
 **Query Parameters**
 
-| Param              | Required | Default | Description                                                   |
-|--------------------|----------|---------|---------------------------------------------------------------|
-| `url`              | yes      | —       | URL to convert                                                |
-| `browser`          | no       | `false` | Use headless Chromium for JS-rendered pages                   |
-| `selector`         | no       | —       | CSS selector to extract specific content (skips Readability)  |
-| `screenshot`       | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders each page for PDFs) |
-| `screenshot_width` | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)               |
-| `screenshot_height`| no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs) |
+| Param               | Required | Default | Description                                                                            |
+| ------------------- | -------- | ------- | -------------------------------------------------------------------------------------- |
+| `url`               | yes      | —       | URL to convert                                                                         |
+| `browser`           | no       | `false` | Use headless Chromium for JS-rendered pages                                            |
+| `selector`          | no       | —       | CSS selector to extract specific content (skips Readability)                           |
+| `screenshot`        | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders each page for PDFs) |
+| `screenshot_width`  | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)                                        |
+| `screenshot_height` | no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs)                     |
 
 **Example — HTML**
 
@@ -103,9 +103,7 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com'
   "url": "https://example.com/",
   "title": "Example Domain",
   "markdown": "# Example Domain\n\nThis domain is for use in...",
-  "links": [
-    { "url": "https://example.com/about", "text": "About", "rel": null }
-  ]
+  "links": [{ "url": "https://example.com/about", "text": "About", "rel": null }]
 }
 ```
 
@@ -142,16 +140,17 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screens
 
 **Response Codes**
 
-| Status | Description |
-|--------|-------------|
+| Status | Description                                                                                                      |
+| ------ | ---------------------------------------------------------------------------------------------------------------- |
 | 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` (HTML) or `screenshots` (PDF) |
-| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected |
-| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF resource |
-| 422    | Validation error — missing or invalid `url` parameter |
-| 4xx    | Upstream non-success status forwarded from the target URL |
-| 502    | Connection failure — DNS error, timeout, or unreachable host |
+| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                   |
+| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF resource                                        |
+| 422    | Validation error — missing or invalid `url` parameter                                                            |
+| 4xx    | Upstream non-success status forwarded from the target URL                                                        |
+| 502    | Connection failure — DNS error, timeout, or unreachable host                                                     |
 
 **Notes**
+
 - Content type is auto-detected via HEAD request, with magic-byte sniffing as fallback for `application/octet-stream` responses
 - `links` contains same-domain links only (external links are excluded), resolved to absolute URLs
 - `screenshot` (singular) is a base64-encoded PNG for HTML pages, only present when `screenshot=true`
@@ -222,33 +221,33 @@ All config is env-driven. See `.env.example` for available settings.
 
 ### General
 
-| Variable             | Default                   | Description                          |
-|----------------------|---------------------------|--------------------------------------|
-| `TZ`                 | `UTC`                     | Server timezone                      |
-| `PORT`               | `3333`                    | HTTP port                            |
-| `HOST`               | `0.0.0.0`                | Bind address                         |
-| `LOG_LEVEL`          | `info`                    | Log level                            |
-| `APP_KEY`            | —                         | Encryption key (required, `node ace generate:key`) |
-| `NODE_ENV`           | `development`             | Environment (`development`, `production`, `test`) |
-| `APP_URL`            | `http://localhost:3333`   | Public-facing URL                    |
-| `APP_NAME`           | `url-to-markdown`         | Application name                     |
-| `APP_VERSION`        | `0.0.0`                   | Application version                  |
-| `APP_ENV`            | `development`             | Application environment              |
-| `REQUEST_BODY_LIMIT` | `5mb`                     | Max request body size                |
+| Variable             | Default                 | Description                                        |
+| -------------------- | ----------------------- | -------------------------------------------------- |
+| `TZ`                 | `UTC`                   | Server timezone                                    |
+| `PORT`               | `3333`                  | HTTP port                                          |
+| `HOST`               | `0.0.0.0`               | Bind address                                       |
+| `LOG_LEVEL`          | `info`                  | Log level                                          |
+| `APP_KEY`            | —                       | Encryption key (required, `node ace generate:key`) |
+| `NODE_ENV`           | `development`           | Environment (`development`, `production`, `test`)  |
+| `APP_URL`            | `http://localhost:3333` | Public-facing URL                                  |
+| `APP_NAME`           | `url-to-markdown`       | Application name                                   |
+| `APP_VERSION`        | `0.0.0`                 | Application version                                |
+| `APP_ENV`            | `development`           | Application environment                            |
+| `REQUEST_BODY_LIMIT` | `5mb`                   | Max request body size                              |
 
 ### Rate Limiting
 
-| Variable              | Default      | Description                          |
-|-----------------------|--------------|--------------------------------------|
-| `RATE_LIMIT_REQUESTS` | `60`         | Max requests per window              |
-| `RATE_LIMIT_DURATION` | `1 minute`   | Rate limit window duration           |
-| `RATE_LIMIT_BLOCK_FOR`| `5 minutes`  | Block duration after limit exceeded  |
-| `LIMITER_STORE`       | `memory`     | Limiter backend (`memory`)           |
+| Variable               | Default     | Description                         |
+| ---------------------- | ----------- | ----------------------------------- |
+| `RATE_LIMIT_REQUESTS`  | `60`        | Max requests per window             |
+| `RATE_LIMIT_DURATION`  | `1 minute`  | Rate limit window duration          |
+| `RATE_LIMIT_BLOCK_FOR` | `5 minutes` | Block duration after limit exceeded |
+| `LIMITER_STORE`        | `memory`    | Limiter backend (`memory`)          |
 
 ### SSRF Protection
 
-| Variable             | Default | Description                              |
-|----------------------|---------|------------------------------------------|
+| Variable             | Default | Description                                                                                   |
+| -------------------- | ------- | --------------------------------------------------------------------------------------------- |
 | `SSRF_ALLOWED_CIDRS` | —       | Comma-separated CIDRs to exempt from private-IP blocking (e.g., `10.96.0.0/12,10.244.0.0/16`) |
 | `SSRF_ALLOWED_HOSTS` | —       | Comma-separated hostnames to exempt from SSRF checks (e.g., `pdf-store.ns.svc.cluster.local`) |
 
@@ -256,13 +255,13 @@ By default, all private/internal IP ranges are blocked. When deploying in Kubern
 
 ### Browser / Fetch
 
-| Variable                   | Default | Description                              |
-|----------------------------|---------|------------------------------------------|
-| `URL_TIMEOUT_MS`           | `30000` | Default page timeout (ms)                |
-| `URL_NAVIGATION_TIMEOUT_MS`| `30000` | Navigation timeout (ms)                  |
-| `URL_VIEWPORT_WIDTH`       | `1280`  | Default browser viewport width           |
-| `URL_VIEWPORT_HEIGHT`      | `720`   | Default browser viewport height          |
-| `URL_WAIT_UNTIL`           | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`) |
+| Variable                    | Default | Description                                               |
+| --------------------------- | ------- | --------------------------------------------------------- |
+| `URL_TIMEOUT_MS`            | `30000` | Default page timeout (ms)                                 |
+| `URL_NAVIGATION_TIMEOUT_MS` | `30000` | Navigation timeout (ms)                                   |
+| `URL_VIEWPORT_WIDTH`        | `1280`  | Default browser viewport width                            |
+| `URL_VIEWPORT_HEIGHT`       | `720`   | Default browser viewport height                           |
+| `URL_WAIT_UNTIL`            | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`) |
 
 ## Development
 
@@ -277,8 +276,8 @@ npm run typecheck    # TypeScript check
 
 ## Also by Nanodeck
 
-| Project | Description |
-|---------|-------------|
+| Project                                                | Description                                                                                                                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [html-to-pdf](https://github.com/nanodeck/html-to-pdf) | Self-hosted API to convert HTML to high-quality PDF documents using headless Chromium. Supports thumbnails, file storage, and MCP tool for AI agent workflows. |
 
 ## License

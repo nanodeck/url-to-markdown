@@ -34,7 +34,8 @@ export class PdfScreenshotService {
         const canvas = createCanvas(Math.floor(viewport.width), Math.floor(viewport.height))
         const ctx = canvas.getContext('2d')
 
-        await pdfPage.render({ canvas: canvas as never, canvasContext: ctx as never, viewport }).promise
+        await pdfPage.render({ canvas: canvas as never, canvasContext: ctx as never, viewport })
+          .promise
 
         screenshots.push(canvas.toBuffer('image/png').toString('base64'))
       }

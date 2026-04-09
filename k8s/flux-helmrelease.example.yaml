@@ -28,7 +28,7 @@ spec:
   chart:
     spec:
       chart: url-to-markdown
-      version: "0.1.0"
+      version: '0.1.0'
       sourceRef:
         kind: HelmRepository
         name: url-to-markdown
@@ -45,12 +45,12 @@ spec:
         cpu: 500m
         memory: 1Gi
       limits:
-        cpu: "2"
+        cpu: '2'
         memory: 2Gi
     config:
-      APP_URL: "https://url-to-markdown.example.com"
+      APP_URL: 'https://url-to-markdown.example.com'
       LOG_LEVEL: warn
-      RATE_LIMIT_REQUESTS: "120"
+      RATE_LIMIT_REQUESTS: '120'
   valuesFrom:
     - kind: Secret
       name: url-to-markdown-app-key

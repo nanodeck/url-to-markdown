@@ -7,6 +7,7 @@ Please report security issues privately.
 egorovpasha ﹫ (google mail)
 
 Include:
+
 - A description of the issue
 - Steps to reproduce
 - Potential impact

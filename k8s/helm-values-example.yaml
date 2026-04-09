@@ -10,7 +10,7 @@
 #     -n url-to-markdown --create-namespace \
 #     -f k8s/helm-values-example.yaml
 
-appKey: "CHANGE-ME-generate-with-node-ace-generate-key"
+appKey: 'CHANGE-ME-generate-with-node-ace-generate-key'
 
 replicaCount: 2
 
@@ -25,10 +25,10 @@ resources:
     cpu: 500m
     memory: 1Gi
   limits:
-    cpu: "2"
+    cpu: '2'
     memory: 2Gi
 
 config:
-  APP_URL: "https://url-to-markdown.example.com"
+  APP_URL: 'https://url-to-markdown.example.com'
   LOG_LEVEL: warn
-  RATE_LIMIT_REQUESTS: "120"
+  RATE_LIMIT_REQUESTS: '120'

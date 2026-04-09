@@ -3,7 +3,7 @@ name: url-to-markdown
 description: Self-hosted API to convert any web page to clean Markdown
 type: application
 version: 0.1.0
-appVersion: "latest"
+appVersion: 'latest'
 home: https://github.com/nanodeck/url-to-markdown
 sources:
   - https://github.com/nanodeck/url-to-markdown

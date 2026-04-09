@@ -101,10 +101,7 @@ test.group('UrlGuardService: host allowlist', () => {
 
 test.group('UrlGuardService: both allowlists combined', () => {
   test('CIDR and host allowlists work together', async ({ assert }) => {
-    const guard = new UrlGuardService(
-      ['10.96.0.0/12'],
-      ['pdf-store.internal.svc.cluster.local']
-    )
+    const guard = new UrlGuardService(['10.96.0.0/12'], ['pdf-store.internal.svc.cluster.local'])
 
     // Allowed by CIDR
     assert.isNull(await guard.validate('http://10.96.0.1/'))

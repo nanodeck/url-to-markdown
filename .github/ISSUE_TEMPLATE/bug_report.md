@@ -7,6 +7,7 @@ labels: bug
 ## Summary
 
 ## Steps to Reproduce
+
 1.
 2.
 3.
@@ -16,9 +17,9 @@ labels: bug
 ## Actual Behavior
 
 ## Environment
+
 - OS:
 - Node version:
 - Deployment (local/Docker/etc.):
 
 ## Logs / Screenshots
-
