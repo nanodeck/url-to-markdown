@@ -1,4 +1,4 @@
-export type ContentCategory = 'html' | 'pdf' | 'unsupported'
+export type ContentCategory = 'html' | 'pdf' | 'docx' | 'unsupported'
 
 export class SsrfRedirectError extends Error {
   constructor(public readonly blockedUrl: string) {
@@ -9,8 +9,11 @@ export class SsrfRedirectError extends Error {
 
 const HTML_TYPES = ['text/html', 'application/xhtml+xml']
 
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
 const EXTENSION_MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',
+  '.docx': DOCX_MIME,
 }
 
 const MAGIC_BYTES: Array<{ mime: string; bytes: number[] }> = [
@@ -31,6 +34,10 @@ export class ContentTypeService {
 
     if (mimeType === 'application/pdf') {
       return 'pdf'
+    }
+
+    if (mimeType === DOCX_MIME) {
+      return 'docx'
     }
 
     return 'unsupported'

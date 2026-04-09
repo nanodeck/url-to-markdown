@@ -52,6 +52,11 @@ export class BrowserService {
     }
   }
 
+  async newPage(viewport: { width: number; height: number }) {
+    const browser = await this.getBrowser()
+    return browser.newPage({ viewport })
+  }
+
   async fetchPage(url: string, screenshot?: ScreenshotOptions): Promise<FetchResult> {
     const browser = await this.getBrowser()
     const page = await browser.newPage({

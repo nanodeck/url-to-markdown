@@ -15,6 +15,7 @@ import markdownService from '#services/markdown_service'
 import urlGuardService from '#services/url_guard_service'
 import contentTypeService, { SsrfRedirectError } from '#services/content_type_service'
 import pdfService from '#services/pdf_service'
+import docxService from '#services/docx_service'
 
 export default class UrlController {
   @ApiTags('URL')
@@ -131,6 +132,13 @@ export default class UrlController {
       })
     }
 
+    if (category === 'docx') {
+      return this.handleDocx(payload.url, startedAt, response, logger, {
+        screenshot: !!payload.screenshot,
+        screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
+      })
+    }
+
     return this.handleHtml(payload, startedAt, response, logger)
   }
 
@@ -174,6 +182,49 @@ export default class UrlController {
       const message = error instanceof Error ? error.message : 'Failed to process PDF'
       logger.info({ err: error, url, message }, 'url:pdf conversion failed')
       return response.status(502).send({ error: `Failed to process PDF: ${message}`, status: 502 })
+    }
+  }
+
+  private async handleDocx(
+    url: string,
+    startedAt: number,
+    response: HttpContext['response'],
+    logger: Logger,
+    options?: { screenshot?: boolean; screenshotWidth?: number }
+  ) {
+    try {
+      const result = await docxService.fetchAndConvert(url, {
+        screenshot: options?.screenshot,
+        screenshotWidth: options?.screenshotWidth,
+        validateUrl: urlGuardService.validate.bind(urlGuardService),
+      })
+
+      logger.info(
+        {
+          durationMs: Date.now() - startedAt,
+          url,
+          markdownLength: result.markdown.length,
+          screenshotCount: result.screenshots?.length ?? 0,
+        },
+        'url:docx conversion completed'
+      )
+
+      const body: Record<string, unknown> = {
+        url,
+        title: null,
+        markdown: result.markdown,
+        links: [],
+      }
+
+      if (result.screenshots) {
+        body.screenshots = result.screenshots
+      }
+
+      return response.send(body)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to process DOCX'
+      logger.info({ err: error, url, message }, 'url:docx conversion failed')
+      return response.status(502).send({ error: `Failed to process DOCX: ${message}`, status: 502 })
     }
   }
 

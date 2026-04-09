@@ -34,6 +34,19 @@ test.group('ContentTypeService', () => {
     assert.equal(service.classify('application/json'), 'unsupported')
   })
 
+  test('classifies DOCX MIME type as docx', ({ assert }) => {
+    const service = new ContentTypeService()
+    assert.equal(
+      service.classify('application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+      'docx'
+    )
+  })
+
+  test('classifies application/msword as unsupported', ({ assert }) => {
+    const service = new ContentTypeService()
+    assert.equal(service.classify('application/msword'), 'unsupported')
+  })
+
   test('classifies null content-type as html (fallback)', ({ assert }) => {
     const service = new ContentTypeService()
     assert.equal(service.classify(null), 'html')
@@ -63,7 +76,10 @@ test.group('ContentTypeService.detect', (group) => {
     const pdfMagicBytes = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34])
 
     fixtureServer = createServer((req, res) => {
-      if (req.url === '/octet-pdf') {
+      if (req.url === '/file.docx') {
+        res.writeHead(200, { 'Content-Type': 'application/octet-stream' })
+        res.end()
+      } else if (req.url === '/octet-pdf') {
         if (req.method === 'HEAD') {
           res.writeHead(200, { 'Content-Type': 'application/octet-stream' })
           res.end()
@@ -123,6 +139,12 @@ test.group('ContentTypeService.detect', (group) => {
     const service = new ContentTypeService()
     const result = await service.detect(`http://127.0.0.1:${fixturePort}/octet-unknown`)
     assert.equal(result, 'application/octet-stream')
+  })
+
+  test('refines octet-stream to DOCX MIME via .docx extension', async ({ assert }) => {
+    const service = new ContentTypeService()
+    const result = await service.detect(`http://127.0.0.1:${fixturePort}/file.docx`)
+    assert.equal(result, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
   })
 
   test('throws SsrfRedirectError when redirect target is blocked', async ({ assert }) => {
