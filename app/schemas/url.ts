@@ -75,6 +75,14 @@ export class UrlToMarkdownResponse {
     description: 'Base64-encoded PNG screenshot of the page (present when screenshot=true)',
   })
   declare screenshot: string | null
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description:
+      'Base64-encoded PNG images of each PDF page (present when screenshot=true for PDF URLs). Height is auto-calculated from page aspect ratio; screenshot_height is ignored for PDFs.',
+  })
+  declare screenshots: string[] | null
 }
 
 export class UrlErrorResponse {

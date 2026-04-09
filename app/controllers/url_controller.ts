@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import type { Logger } from '@adonisjs/core/logger'
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
 import { urlQueryValidator } from '#validators/url'
 import {
@@ -12,6 +13,8 @@ import browserService, { type ScreenshotOptions } from '#services/browser_servic
 import readabilityService from '#services/readability_service'
 import markdownService from '#services/markdown_service'
 import urlGuardService from '#services/url_guard_service'
+import contentTypeService, { SsrfRedirectError } from '#services/content_type_service'
+import pdfService from '#services/pdf_service'
 
 export default class UrlController {
   @ApiTags('URL')
@@ -71,6 +74,11 @@ export default class UrlController {
     type: UrlErrorResponse,
   })
   @ApiResponse({
+    status: 415,
+    description: 'Unsupported content type',
+    type: UrlErrorResponse,
+  })
+  @ApiResponse({
     status: 502,
     description: 'Failed to reach URL',
     type: UrlErrorResponse,
@@ -87,6 +95,98 @@ export default class UrlController {
     }
 
     const startedAt = Date.now()
+
+    const validateUrl = urlGuardService.validate.bind(urlGuardService)
+
+    let contentType: string | null
+    try {
+      contentType = await contentTypeService.detect(payload.url, { validateUrl })
+    } catch (error) {
+      if (error instanceof SsrfRedirectError) {
+        logger.info({ url: payload.url, blockedUrl: error.blockedUrl }, 'url:blocked by SSRF guard (redirect)')
+        return response.status(403).send({ error: error.message, status: 403 })
+      }
+      throw error
+    }
+
+    const category = contentTypeService.classify(contentType)
+
+    logger.info({ url: payload.url, contentType, category }, 'url:content type detected')
+
+    if (category === 'unsupported') {
+      const mimeType = contentType?.split(';')[0].trim() ?? 'unknown'
+      return response.status(415).send({
+        error: `Unsupported content type: ${mimeType}`,
+        status: 415,
+      })
+    }
+
+    if (category === 'pdf') {
+      return this.handlePdf(payload.url, startedAt, response, logger, {
+        screenshot: !!payload.screenshot,
+        screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
+      })
+    }
+
+    return this.handleHtml(payload, startedAt, response, logger)
+  }
+
+  private async handlePdf(
+    url: string,
+    startedAt: number,
+    response: HttpContext['response'],
+    logger: Logger,
+    options?: { screenshot?: boolean; screenshotWidth?: number }
+  ) {
+    try {
+      const result = await pdfService.fetchAndConvert(url, {
+        screenshot: options?.screenshot,
+        screenshotWidth: options?.screenshotWidth,
+        validateUrl: urlGuardService.validate.bind(urlGuardService),
+      })
+
+      logger.info(
+        {
+          durationMs: Date.now() - startedAt,
+          url,
+          markdownLength: result.markdown.length,
+          screenshotCount: result.screenshots?.length ?? 0,
+        },
+        'url:pdf conversion completed'
+      )
+
+      const body: Record<string, unknown> = {
+        url,
+        title: null,
+        markdown: result.markdown,
+        links: [],
+      }
+
+      if (result.screenshots) {
+        body.screenshots = result.screenshots
+      }
+
+      return response.send(body)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to process PDF'
+      logger.info({ err: error, url, message }, 'url:pdf conversion failed')
+      return response.status(502).send({ error: `Failed to process PDF: ${message}`, status: 502 })
+    }
+  }
+
+  private async handleHtml(
+    payload: {
+      url: string
+      browser?: boolean
+      selector?: string
+      screenshot?: boolean
+      screenshot_width?: number
+      screenshot_height?: number
+    },
+    startedAt: number,
+    response: HttpContext['response'],
+    logger: Logger
+  ) {
     const screenshotOpts = this.buildScreenshotOptions(
       !!payload.screenshot,
       payload.screenshot_width,
@@ -96,7 +196,7 @@ export default class UrlController {
 
     logger.info(
       { url: payload.url, browser: useBrowser, screenshot: !!screenshotOpts },
-      'url:request received'
+      'url:html request processing'
     )
 
     const fetchResult = await this.fetchUrl(payload.url, useBrowser, screenshotOpts, logger)
@@ -159,7 +259,7 @@ export default class UrlController {
     url: string,
     useBrowser: boolean,
     screenshot: ScreenshotOptions | undefined,
-    logger: import('@adonisjs/core/logger').Logger
+    logger: Logger
   ): Promise<
     | { html: string; status: number; finalUrl: string; screenshot: string | null }
     | { error: string; status: number }
