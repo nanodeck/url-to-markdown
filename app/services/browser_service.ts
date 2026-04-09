@@ -57,7 +57,11 @@ export class BrowserService {
     return browser.newPage({ viewport })
   }
 
-  async fetchPage(url: string, screenshot?: ScreenshotOptions): Promise<FetchResult> {
+  async fetchPage(
+    url: string,
+    screenshot?: ScreenshotOptions,
+    shadow?: boolean
+  ): Promise<FetchResult> {
     const browser = await this.getBrowser()
     const page = await browser.newPage({
       userAgent: CHROME_UA,
@@ -75,6 +79,19 @@ export class BrowserService {
       const response = await page.goto(url, {
         waitUntil: env.get('URL_WAIT_UNTIL', 'load'),
       })
+
+      if (shadow) {
+        await page.evaluate(`
+          (function flattenShadowRoots(root) {
+            for (const el of root.querySelectorAll('*')) {
+              if (el.shadowRoot) {
+                flattenShadowRoots(el.shadowRoot);
+                el.innerHTML = el.shadowRoot.innerHTML;
+              }
+            }
+          })(document)
+        `)
+      }
 
       const status = response?.status() ?? 0
       const html = await page.content()

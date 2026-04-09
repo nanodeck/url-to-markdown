@@ -59,6 +59,12 @@ export default class UrlController {
     type: Number,
     description: 'Screenshot viewport height in pixels (default: 720, max: 1080)',
   })
+  @ApiQuery({
+    name: 'shadow',
+    required: false,
+    type: Boolean,
+    description: 'Extract shadow DOM content (implies browser mode)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Markdown conversion result',
@@ -236,6 +242,7 @@ export default class UrlController {
       screenshot?: boolean
       screenshot_width?: number
       screenshot_height?: number
+      shadow?: boolean
     },
     startedAt: number,
     response: HttpContext['response'],
@@ -246,14 +253,20 @@ export default class UrlController {
       payload.screenshot_width,
       payload.screenshot_height
     )
-    const useBrowser = !!payload.browser || !!screenshotOpts
+    const useBrowser = !!payload.browser || !!screenshotOpts || !!payload.shadow
 
     logger.info(
       { url: payload.url, browser: useBrowser, screenshot: !!screenshotOpts },
       'url:html request processing'
     )
 
-    const fetchResult = await this.fetchUrl(payload.url, useBrowser, screenshotOpts, logger)
+    const fetchResult = await this.fetchUrl(
+      payload.url,
+      useBrowser,
+      screenshotOpts,
+      logger,
+      payload.shadow
+    )
     if ('error' in fetchResult) {
       return response.status(fetchResult.status).send(fetchResult)
     }
@@ -313,14 +326,15 @@ export default class UrlController {
     url: string,
     useBrowser: boolean,
     screenshot: ScreenshotOptions | undefined,
-    logger: Logger
+    logger: Logger,
+    shadow?: boolean
   ): Promise<
     | { html: string; status: number; finalUrl: string; screenshot: string | null }
     | { error: string; status: number }
   > {
     try {
       if (useBrowser) {
-        return await browserService.fetchPage(url, screenshot)
+        return await browserService.fetchPage(url, screenshot, shadow)
       }
 
       const res = await fetch(url, {

@@ -9,15 +9,17 @@
 
 # URL to Markdown
 
-Self-hosted API to convert any web page to clean Markdown. Handles JavaScript-rendered sites with headless Chromium, bypasses bot detection, extracts same-domain links, and captures screenshots. Ships as a lightweight Docker image.
+Self-hosted API to convert any web page, PDF, or Word document to clean Markdown. Handles JavaScript-rendered sites with headless Chromium, bypasses bot detection, extracts same-domain links, and captures screenshots. Ships as a lightweight Docker image.
 
 ## Features
 
 - **HTML to Markdown conversion** — fetches any URL and returns clean Markdown using Readability and Turndown
 - **PDF to Markdown conversion** — automatically detects PDF URLs and converts them to Markdown, with optional per-page PNG screenshots
+- **DOCX to Markdown conversion** — automatically detects Word document URLs and converts them to Markdown, with optional screenshot
 - **JavaScript rendering** — headless Chromium via Patchright for JS-heavy and single-page apps
 - **Bot detection evasion** — stealth patches to bypass Cloudflare, DataDome, and other anti-bot systems
 - **Screenshot capture** — full-page PNG screenshots with configurable viewport
+- **Shadow DOM extraction** — opt-in flattening of open shadow roots for Web Component-heavy pages
 - **CSS selector extraction** — target specific page elements instead of full-page conversion
 - **Link extraction** — returns all same-domain links as structured data
 - **SSRF protection** — blocks requests to private IPs and internal networks, with configurable CIDR and hostname allowlists for cluster-internal services
@@ -88,6 +90,7 @@ Convert a web page to clean Markdown.
 | `url`               | yes      | —       | URL to convert                                                                         |
 | `browser`           | no       | `false` | Use headless Chromium for JS-rendered pages                                            |
 | `selector`          | no       | —       | CSS selector to extract specific content (skips Readability)                           |
+| `shadow`            | no       | `false` | Extract shadow DOM content (implies `browser=true`; open roots only)                   |
 | `screenshot`        | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders each page for PDFs) |
 | `screenshot_width`  | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)                                        |
 | `screenshot_height` | no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs)                     |
@@ -106,6 +109,16 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com'
   "links": [{ "url": "https://example.com/about", "text": "About", "rel": null }]
 }
 ```
+
+**Example — Shadow DOM**
+
+For pages built with Web Components whose content lives inside shadow roots:
+
+```bash
+curl 'http://localhost:3333/api/fetch?url=https://example.com&shadow=true'
+```
+
+Shadow DOM flattening recursively replaces each shadow host's content with its shadow root's HTML before extraction. Closed shadow roots (`mode: 'closed'`) are inaccessible and silently skipped.
 
 **Example — PDF**
 
@@ -138,24 +151,39 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screens
 }
 ```
 
+**Example — DOCX**
+
+```bash
+curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
+```
+
+```json
+{
+  "url": "https://example.com/document.docx",
+  "title": null,
+  "markdown": "# Document Title\n\nExtracted text from the Word document...",
+  "links": []
+}
+```
+
 **Response Codes**
 
-| Status | Description                                                                                                      |
-| ------ | ---------------------------------------------------------------------------------------------------------------- |
-| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` (HTML) or `screenshots` (PDF) |
-| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                   |
-| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF resource                                        |
-| 422    | Validation error — missing or invalid `url` parameter                                                            |
-| 4xx    | Upstream non-success status forwarded from the target URL                                                        |
-| 502    | Connection failure — DNS error, timeout, or unreachable host                                                     |
+| Status | Description                                                                                                           |
+| ------ | --------------------------------------------------------------------------------------------------------------------- |
+| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` (HTML) or `screenshots` (PDF/DOCX) |
+| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                        |
+| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF, non-DOCX resource                                   |
+| 422    | Validation error — missing or invalid `url` parameter                                                                 |
+| 4xx    | Upstream non-success status forwarded from the target URL                                                             |
+| 502    | Connection failure — DNS error, timeout, or unreachable host                                                          |
 
 **Notes**
 
 - Content type is auto-detected via HEAD request, with magic-byte sniffing as fallback for `application/octet-stream` responses
 - `links` contains same-domain links only (external links are excluded), resolved to absolute URLs
 - `screenshot` (singular) is a base64-encoded PNG for HTML pages, only present when `screenshot=true`
-- `screenshots` (plural) is an array of base64-encoded PNGs for PDF pages, only present when `screenshot=true` on a PDF URL
-- `title` may be `null` (always `null` for PDFs)
+- `screenshots` (plural) is an array of base64-encoded PNGs for PDF/DOCX pages, only present when `screenshot=true` on a PDF or DOCX URL
+- `title` may be `null` (always `null` for PDFs and DOCX files)
 
 ## Bot Detection Evasion
 
