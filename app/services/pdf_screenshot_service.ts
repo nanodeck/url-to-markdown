@@ -3,9 +3,11 @@ import { createCanvas, Path2D } from '@napi-rs/canvas'
 
 export type PdfScreenshotOptions = {
   width?: number
+  pages?: number
 }
 
 const DEFAULT_WIDTH = 1280
+const DEFAULT_PAGES = 1
 
 // pdfjs-dist expects a global Path2D for canvas rendering; Node.js doesn't provide one,
 // so we polyfill it with @napi-rs/canvas's implementation.
@@ -16,6 +18,7 @@ if (!('Path2D' in globalThis)) {
 export class PdfScreenshotService {
   async render(buffer: Uint8Array, options?: PdfScreenshotOptions): Promise<string[]> {
     const targetWidth = options?.width ?? DEFAULT_WIDTH
+    const maxPages = Math.max(1, options?.pages ?? DEFAULT_PAGES)
     const doc = await getDocument({
       data: buffer.slice(),
       useSystemFonts: true,
@@ -25,7 +28,8 @@ export class PdfScreenshotService {
     const screenshots: string[] = []
 
     try {
-      for (let page = 1; page <= doc.numPages; page++) {
+      const lastPage = Math.min(maxPages, doc.numPages)
+      for (let page = 1; page <= lastPage; page++) {
         const pdfPage = await doc.getPage(page)
         const defaultViewport = pdfPage.getViewport({ scale: 1 })
         const scale = targetWidth / defaultViewport.width

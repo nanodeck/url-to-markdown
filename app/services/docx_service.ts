@@ -6,6 +6,7 @@ import docxScreenshotService from './docx_screenshot_service.js'
 export type DocxConvertOptions = {
   screenshot?: boolean
   screenshotWidth?: number
+  screenshotPages?: number
 }
 
 export type DocxConvertResult = {
@@ -17,7 +18,7 @@ const FETCH_TIMEOUT_MS = 30_000
 const MAX_DOCX_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export class DocxService {
-  constructor(private converter: DocxConverter) {}
+  constructor(private readonly converter: DocxConverter) {}
 
   async convert(buffer: Uint8Array, options?: DocxConvertOptions): Promise<DocxConvertResult> {
     const html = await this.converter.convert(buffer)
@@ -27,6 +28,7 @@ export class DocxService {
     if (options?.screenshot) {
       screenshots = await docxScreenshotService.render(html, {
         width: options.screenshotWidth,
+        pages: options.screenshotPages,
       })
     }
 

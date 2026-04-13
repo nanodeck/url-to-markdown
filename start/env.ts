@@ -38,4 +38,6 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   SSRF_ALLOWED_CIDRS: Env.schema.string.optional(),
   SSRF_ALLOWED_HOSTS: Env.schema.string.optional(),
+
+  UPLOAD_MAX_SIZE_MB: Env.schema.number.optional(),
 })

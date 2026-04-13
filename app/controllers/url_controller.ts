@@ -60,6 +60,13 @@ export default class UrlController {
     description: 'Screenshot viewport height in pixels (default: 720, max: 1080)',
   })
   @ApiQuery({
+    name: 'screenshot_pages',
+    required: false,
+    type: Number,
+    description:
+      'Number of pages to render for PDF/DOCX screenshots (default: 1). Ignored for HTML.',
+  })
+  @ApiQuery({
     name: 'shadow',
     required: false,
     type: Boolean,
@@ -135,6 +142,7 @@ export default class UrlController {
       return this.handlePdf(payload.url, startedAt, response, logger, {
         screenshot: !!payload.screenshot,
         screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
+        screenshotPages: payload.screenshot_pages,
       })
     }
 
@@ -142,6 +150,7 @@ export default class UrlController {
       return this.handleDocx(payload.url, startedAt, response, logger, {
         screenshot: !!payload.screenshot,
         screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
+        screenshotPages: payload.screenshot_pages,
       })
     }
 
@@ -153,12 +162,13 @@ export default class UrlController {
     startedAt: number,
     response: HttpContext['response'],
     logger: Logger,
-    options?: { screenshot?: boolean; screenshotWidth?: number }
+    options?: { screenshot?: boolean; screenshotWidth?: number; screenshotPages?: number }
   ) {
     try {
       const result = await pdfService.fetchAndConvert(url, {
         screenshot: options?.screenshot,
         screenshotWidth: options?.screenshotWidth,
+        screenshotPages: options?.screenshotPages,
         validateUrl: urlGuardService.validate.bind(urlGuardService),
       })
 
@@ -196,12 +206,13 @@ export default class UrlController {
     startedAt: number,
     response: HttpContext['response'],
     logger: Logger,
-    options?: { screenshot?: boolean; screenshotWidth?: number }
+    options?: { screenshot?: boolean; screenshotWidth?: number; screenshotPages?: number }
   ) {
     try {
       const result = await docxService.fetchAndConvert(url, {
         screenshot: options?.screenshot,
         screenshotWidth: options?.screenshotWidth,
+        screenshotPages: options?.screenshotPages,
         validateUrl: urlGuardService.validate.bind(urlGuardService),
       })
 

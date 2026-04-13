@@ -175,6 +175,20 @@ test.group('PDF integration', (group) => {
     assert.notProperty(body, 'screenshots')
   })
 
+  test('url endpoint respects screenshot_pages for PDF rasterization', async ({
+    client,
+    assert,
+  }) => {
+    const response = await client.get('/api/fetch').qs({
+      url: `http://127.0.0.1:${fixturePort}/test.pdf`,
+      screenshot: 'true',
+      screenshot_pages: 3,
+    })
+
+    response.assertStatus(200)
+    assert.lengthOf(response.body().screenshots, 3)
+  }).timeout(30_000)
+
   test('url endpoint respects screenshot_width for PDF rasterization', async ({
     client,
     assert,

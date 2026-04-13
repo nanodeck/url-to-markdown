@@ -5,6 +5,7 @@ import pdfScreenshotService from './pdf_screenshot_service.js'
 export type PdfConvertOptions = {
   screenshot?: boolean
   screenshotWidth?: number
+  screenshotPages?: number
 }
 
 export type PdfConvertResult = {
@@ -16,7 +17,7 @@ const FETCH_TIMEOUT_MS = 30_000
 const MAX_PDF_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export class PdfService {
-  constructor(private converter: PdfConverter) {}
+  constructor(private readonly converter: PdfConverter) {}
 
   async convert(buffer: Uint8Array, options?: PdfConvertOptions): Promise<PdfConvertResult> {
     const markdown = await this.converter.convert(buffer)
@@ -25,6 +26,7 @@ export class PdfService {
     if (options?.screenshot) {
       screenshots = await pdfScreenshotService.render(buffer, {
         width: options.screenshotWidth,
+        pages: options.screenshotPages,
       })
     }
 

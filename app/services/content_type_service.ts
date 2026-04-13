@@ -20,6 +20,11 @@ const MAGIC_BYTES: Array<{ mime: string; bytes: number[] }> = [
   { mime: 'application/pdf', bytes: [0x25, 0x50, 0x44, 0x46, 0x2d] },
 ]
 
+export function isPdfBytes(buffer: Uint8Array): boolean {
+  const pdf = MAGIC_BYTES.find((m) => m.mime === 'application/pdf')!
+  return pdf.bytes.every((b, i) => buffer[i] === b)
+}
+
 export class ContentTypeService {
   classify(contentType: string | null): ContentCategory {
     if (!contentType) {
