@@ -18,7 +18,7 @@ import pdfService from '#services/pdf_service'
 import docxService from '#services/docx_service'
 
 export default class UrlController {
-  @ApiTags('URL')
+  @ApiTags('Fetch')
   @ApiOperation({
     summary: 'Convert URL to Markdown',
     description: 'Fetch a web page, extract its main content, and return it as Markdown.',

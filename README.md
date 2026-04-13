@@ -78,7 +78,7 @@ docker run \
 | GET    | `/health`     | Health check                                   |
 | GET    | `/api`        | OpenAPI / Scalar UI                            |
 | GET    | `/api/fetch`  | Convert URL to Markdown                        |
-| POST   | `/api/upload` | Upload a PDF/DOCX file and convert to Markdown |
+| POST   | `/api/file`   | Upload a PDF/DOCX file and convert to Markdown |
 
 ### GET /api/fetch
 
@@ -194,7 +194,7 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
   - **PDF/DOCX**: one entry per rendered page, controlled by `screenshot_pages` (default `1`). PDFs cap at the document's actual page count; DOCX slices the rendered HTML evenly. `screenshot_height` is ignored — height is auto-calculated from the page aspect ratio.
 - `title` may be `null` (always `null` for PDFs and DOCX files)
 
-### POST /api/upload
+### POST /api/file
 
 Upload a local PDF or DOCX file directly via `multipart/form-data` and receive Markdown back. Mirrors the `GET /api/fetch` response shape, with the `url` field populated from the original filename.
 
@@ -212,7 +212,7 @@ Maximum upload size is controlled by `UPLOAD_MAX_SIZE_MB` (default `50`).
 **Example**
 
 ```bash
-curl -X POST http://localhost:3333/api/upload \
+curl -X POST http://localhost:3333/api/file \
   -F 'file=@./report.pdf'
 ```
 
@@ -228,7 +228,7 @@ curl -X POST http://localhost:3333/api/upload \
 With page screenshots:
 
 ```bash
-curl -X POST http://localhost:3333/api/upload \
+curl -X POST http://localhost:3333/api/file \
   -F 'file=@./report.pdf' \
   -F 'screenshot=true' \
   -F 'screenshot_pages=3'

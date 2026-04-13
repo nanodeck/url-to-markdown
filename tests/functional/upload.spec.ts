@@ -9,7 +9,7 @@ const DOCX_FIXTURE = join(import.meta.dirname, '..', 'files', 'sample.docx')
 test.group('Upload endpoint', () => {
   test('PDF upload returns markdown with filename as url', async ({ client, assert }) => {
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', PDF_FIXTURE, { contentType: 'application/pdf' })
 
     response.assertStatus(200)
@@ -23,7 +23,7 @@ test.group('Upload endpoint', () => {
   })
 
   test('DOCX upload returns markdown with filename as url', async ({ client, assert }) => {
-    const response = await client.post('/api/upload').file('file', DOCX_FIXTURE, {
+    const response = await client.post('/api/file').file('file', DOCX_FIXTURE, {
       contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     })
 
@@ -39,7 +39,7 @@ test.group('Upload endpoint', () => {
     assert,
   }) => {
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', PDF_FIXTURE, { contentType: 'application/pdf' })
       .fields({ screenshot: 'true' })
 
@@ -54,7 +54,7 @@ test.group('Upload endpoint', () => {
     assert,
   }) => {
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', PDF_FIXTURE, { contentType: 'application/pdf' })
       .fields({ screenshot: 'true', screenshot_pages: '3' })
 
@@ -67,7 +67,7 @@ test.group('Upload endpoint', () => {
     await writeFile(txtPath, 'hello world')
 
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', txtPath, { contentType: 'text/plain' })
 
     response.assertStatus(415)
@@ -81,7 +81,7 @@ test.group('Upload endpoint', () => {
     assert,
   }) => {
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', DOCX_FIXTURE, { contentType: 'application/pdf', filename: 'spoofed.docx' })
 
     response.assertStatus(200)
@@ -94,14 +94,14 @@ test.group('Upload endpoint', () => {
     await writeFile(garbagePath, Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04, 0x05]))
 
     const response = await client
-      .post('/api/upload')
+      .post('/api/file')
       .file('file', garbagePath, { contentType: 'application/octet-stream', filename: 'x.bin' })
 
     response.assertStatus(415)
   })
 
   test('missing file field returns 422', async ({ client, assert }) => {
-    const response = await client.post('/api/upload').fields({ screenshot: 'true' })
+    const response = await client.post('/api/file').fields({ screenshot: 'true' })
 
     response.assertStatus(422)
     const body = response.body()

@@ -35,7 +35,7 @@ function resolveKind(ext: string | undefined, buffer: Uint8Array): Kind | null {
 }
 
 export default class UploadController {
-  @ApiTags('Upload')
+  @ApiTags('File')
   @ApiOperation({
     summary: 'Upload a file and convert to Markdown',
     description: 'Accepts PDF or DOCX file uploads via multipart form data.',
