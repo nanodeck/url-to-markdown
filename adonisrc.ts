@@ -24,6 +24,7 @@ export default defineConfig({
   preloads: [
     () => import('#start/routes'),
     () => import('#start/kernel'),
+    () => import('#start/http'),
     () => import('#start/browser'),
   ],
 

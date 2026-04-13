@@ -54,7 +54,10 @@ export class BrowserService {
 
   async newPage(viewport: { width: number; height: number }) {
     const browser = await this.getBrowser()
-    return browser.newPage({ viewport })
+    return browser.newPage({
+      viewport,
+      ignoreHTTPSErrors: env.get('URL_IGNORE_HTTPS_ERRORS', false),
+    })
   }
 
   async fetchPage(
@@ -69,6 +72,7 @@ export class BrowserService {
         width: screenshot?.width ?? env.get('URL_VIEWPORT_WIDTH', 1280),
         height: screenshot?.height ?? env.get('URL_VIEWPORT_HEIGHT', 720),
       },
+      ignoreHTTPSErrors: env.get('URL_IGNORE_HTTPS_ERRORS', false),
     })
 
     page.setDefaultTimeout(env.get('URL_TIMEOUT_MS', 30_000))
