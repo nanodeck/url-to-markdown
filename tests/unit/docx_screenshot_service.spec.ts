@@ -32,6 +32,17 @@ test.group('DocxScreenshotService', (group) => {
     )
   }).timeout(30_000)
 
+  test('respects pages option to slice the render', async ({ assert }) => {
+    const service = new DocxScreenshotService()
+    const screenshots = await service.render(html, { pages: 3 })
+
+    assert.lengthOf(screenshots, 3)
+    for (const screenshot of screenshots) {
+      const decoded = Buffer.from(screenshot, 'base64')
+      assert.deepEqual([...decoded.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47])
+    }
+  }).timeout(30_000)
+
   test('respects width option', async ({ assert }) => {
     const service = new DocxScreenshotService()
 

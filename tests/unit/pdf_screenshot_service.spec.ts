@@ -6,26 +6,44 @@ import { PdfScreenshotService } from '#services/pdf_screenshot_service'
 const PDF_FIXTURE = join(import.meta.dirname, '..', 'files', 'file-example_PDF_1MB.pdf')
 
 test.group('PdfScreenshotService', () => {
-  test('rasterizes all pages of a PDF to base64 PNGs', async ({ assert }) => {
+  test('renders the first page of a PDF by default', async ({ assert }) => {
     const buffer = new Uint8Array(await readFile(PDF_FIXTURE))
     const service = new PdfScreenshotService()
 
     const screenshots = await service.render(buffer)
 
     assert.isArray(screenshots)
-    assert.isAbove(screenshots.length, 0)
+    assert.lengthOf(screenshots, 1)
 
+    const decoded = Buffer.from(screenshots[0], 'base64')
+    assert.deepEqual(
+      [...decoded.subarray(0, 4)],
+      [0x89, 0x50, 0x4e, 0x47],
+      'should be a valid PNG (magic bytes)'
+    )
+  }).timeout(30_000)
+
+  test('respects pages option to render multiple pages', async ({ assert }) => {
+    const buffer = new Uint8Array(await readFile(PDF_FIXTURE))
+    const service = new PdfScreenshotService()
+
+    const screenshots = await service.render(buffer, { pages: 3 })
+
+    assert.lengthOf(screenshots, 3)
     for (const screenshot of screenshots) {
-      assert.isString(screenshot)
-      assert.isNotEmpty(screenshot)
       const decoded = Buffer.from(screenshot, 'base64')
-      assert.deepEqual(
-        [...decoded.subarray(0, 4)],
-        [0x89, 0x50, 0x4e, 0x47],
-        'should be a valid PNG (magic bytes)'
-      )
+      assert.deepEqual([...decoded.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47])
     }
   }).timeout(30_000)
+
+  test('caps pages option at the actual page count', async ({ assert }) => {
+    const buffer = new Uint8Array(await readFile(PDF_FIXTURE))
+    const service = new PdfScreenshotService()
+
+    const screenshots = await service.render(buffer, { pages: 9999 })
+
+    assert.isAbove(screenshots.length, 1)
+  }).timeout(60_000)
 
   test('respects width option to control output size', async ({ assert }) => {
     const buffer = new Uint8Array(await readFile(PDF_FIXTURE))

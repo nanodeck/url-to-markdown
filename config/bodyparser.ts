@@ -1,6 +1,9 @@
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/core/bodyparser'
 
+const uploadMaxMb = env.get('UPLOAD_MAX_SIZE_MB', 50)
+const multipartLimit = `${uploadMaxMb}mb`
+
 const bodyParserConfig = defineConfig({
   /**
    * The bodyparser middleware will parse the request body
@@ -58,7 +61,7 @@ const bodyParserConfig = defineConfig({
      * Maximum limit of data to parse including all files
      * and fields
      */
-    limit: env.get('REQUEST_BODY_LIMIT'),
+    limit: multipartLimit,
     types: ['multipart/form-data'],
   },
 })

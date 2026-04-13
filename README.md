@@ -72,12 +72,13 @@ docker run \
 
 ## API
 
-| Method | Path         | Description             |
-| ------ | ------------ | ----------------------- |
-| GET    | `/`          | Landing page            |
-| GET    | `/health`    | Health check            |
-| GET    | `/api`       | OpenAPI / Scalar UI     |
-| GET    | `/api/fetch` | Convert URL to Markdown |
+| Method | Path          | Description                                    |
+| ------ | ------------- | ---------------------------------------------- |
+| GET    | `/`           | Landing page                                   |
+| GET    | `/health`     | Health check                                   |
+| GET    | `/api`        | OpenAPI / Scalar UI                            |
+| GET    | `/api/fetch`  | Convert URL to Markdown                        |
+| POST   | `/api/upload` | Upload a PDF/DOCX file and convert to Markdown |
 
 ### GET /api/fetch
 
@@ -85,15 +86,16 @@ Convert a web page to clean Markdown.
 
 **Query Parameters**
 
-| Param               | Required | Default | Description                                                                            |
-| ------------------- | -------- | ------- | -------------------------------------------------------------------------------------- |
-| `url`               | yes      | —       | URL to convert                                                                         |
-| `browser`           | no       | `false` | Use headless Chromium for JS-rendered pages                                            |
-| `selector`          | no       | —       | CSS selector to extract specific content (skips Readability)                           |
-| `shadow`            | no       | `false` | Extract shadow DOM content (implies `browser=true`; open roots only)                   |
-| `screenshot`        | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders each page for PDFs) |
-| `screenshot_width`  | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)                                        |
-| `screenshot_height` | no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs)                     |
+| Param               | Required | Default | Description                                                                        |
+| ------------------- | -------- | ------- | ---------------------------------------------------------------------------------- |
+| `url`               | yes      | —       | URL to convert                                                                     |
+| `browser`           | no       | `false` | Use headless Chromium for JS-rendered pages                                        |
+| `selector`          | no       | —       | CSS selector to extract specific content (skips Readability)                       |
+| `shadow`            | no       | `false` | Extract shadow DOM content (implies `browser=true`; open roots only)               |
+| `screenshot`        | no       | `false` | Capture a PNG screenshot (implies `browser=true` for HTML; renders PDF/DOCX pages) |
+| `screenshot_width`  | no       | `1280`  | Screenshot viewport width in pixels (max: 1920)                                    |
+| `screenshot_height` | no       | `720`   | Screenshot viewport height in pixels (max: 1080; ignored for PDFs/DOCX)            |
+| `screenshot_pages`  | no       | `1`     | Number of pages to render for PDF/DOCX (default: 1). Ignored for HTML.             |
 
 **Example — HTML**
 
@@ -135,10 +137,10 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf'
 }
 ```
 
-With per-page screenshots:
+With page screenshots (defaults to the first page; use `screenshot_pages` to render more):
 
 ```bash
-curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screenshot=true'
+curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screenshot=true&screenshot_pages=3'
 ```
 
 ```json
@@ -147,9 +149,15 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/report.pdf&screens
   "title": null,
   "markdown": "...",
   "links": [],
-  "screenshots": ["iVBORw0KGgo...(base64 PNG page 1)", "iVBORw0KGgo...(page 2)"]
+  "screenshots": [
+    "iVBORw0KGgo...(base64 PNG page 1)",
+    "iVBORw0KGgo...(page 2)",
+    "iVBORw0KGgo...(page 3)"
+  ]
 }
 ```
+
+`screenshot_pages` is capped at the document's actual page count.
 
 **Example — DOCX**
 
@@ -182,8 +190,68 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
 - Content type is auto-detected via HEAD request, with magic-byte sniffing as fallback for `application/octet-stream` responses
 - `links` contains same-domain links only (external links are excluded), resolved to absolute URLs
 - `screenshot` (singular) is a base64-encoded PNG for HTML pages, only present when `screenshot=true`
-- `screenshots` (plural) is an array of base64-encoded PNGs for PDF/DOCX pages, only present when `screenshot=true` on a PDF or DOCX URL
+- `screenshots` (plural) is an array of base64-encoded PNGs for PDF/DOCX pages, only present when `screenshot=true` on a PDF or DOCX URL. Defaults to one entry; raise `screenshot_pages` to render more (PDFs cap at the document length, DOCX slices the rendered HTML evenly)
 - `title` may be `null` (always `null` for PDFs and DOCX files)
+
+### POST /api/upload
+
+Upload a local PDF or DOCX file directly via `multipart/form-data` and receive Markdown back. Mirrors the `GET /api/fetch` response shape, with the `url` field populated from the original filename.
+
+**Form Fields**
+
+| Field              | Required | Default | Description                            |
+| ------------------ | -------- | ------- | -------------------------------------- |
+| `file`             | yes      | —       | PDF or DOCX file                       |
+| `screenshot`       | no       | `false` | Render per-page screenshots            |
+| `screenshot_width` | no       | `1280`  | Screenshot width in pixels (max: 1920) |
+| `screenshot_pages` | no       | `1`     | Number of pages to render              |
+
+Maximum upload size is controlled by `UPLOAD_MAX_SIZE_MB` (default `50`).
+
+**Example**
+
+```bash
+curl -X POST http://localhost:3333/api/upload \
+  -F 'file=@./report.pdf'
+```
+
+```json
+{
+  "url": "report.pdf",
+  "title": null,
+  "markdown": "# Report Title\n\nExtracted text...",
+  "links": []
+}
+```
+
+With page screenshots:
+
+```bash
+curl -X POST http://localhost:3333/api/upload \
+  -F 'file=@./report.pdf' \
+  -F 'screenshot=true' \
+  -F 'screenshot_pages=3'
+```
+
+```json
+{
+  "url": "report.pdf",
+  "title": null,
+  "markdown": "...",
+  "links": [],
+  "screenshots": ["iVBORw0KGgo...(page 1)", "iVBORw0KGgo...(page 2)", "iVBORw0KGgo...(page 3)"]
+}
+```
+
+**Response Codes**
+
+| Status | Description                                       |
+| ------ | ------------------------------------------------- |
+| 200    | Success — same shape as `/api/fetch` for PDF/DOCX |
+| 413    | File exceeds `UPLOAD_MAX_SIZE_MB`                 |
+| 415    | Unsupported file type or mime / bytes mismatch    |
+| 422    | Missing `file` field or invalid form field        |
+| 502    | Conversion failed                                 |
 
 ## Bot Detection Evasion
 
@@ -283,13 +351,13 @@ By default, all private/internal IP ranges are blocked. When deploying in Kubern
 
 ### Browser / Fetch
 
-| Variable                    | Default | Description                                               |
-| --------------------------- | ------- | --------------------------------------------------------- |
-| `URL_TIMEOUT_MS`            | `30000` | Default page timeout (ms)                                 |
-| `URL_NAVIGATION_TIMEOUT_MS` | `30000` | Navigation timeout (ms)                                   |
-| `URL_VIEWPORT_WIDTH`        | `1280`  | Default browser viewport width                            |
-| `URL_VIEWPORT_HEIGHT`       | `720`   | Default browser viewport height                           |
-| `URL_WAIT_UNTIL`            | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`) |
+| Variable                    | Default | Description                                                                                                                                                                             |
+| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `URL_TIMEOUT_MS`            | `30000` | Default page timeout (ms)                                                                                                                                                               |
+| `URL_NAVIGATION_TIMEOUT_MS` | `30000` | Navigation timeout (ms)                                                                                                                                                                 |
+| `URL_VIEWPORT_WIDTH`        | `1280`  | Default browser viewport width                                                                                                                                                          |
+| `URL_VIEWPORT_HEIGHT`       | `720`   | Default browser viewport height                                                                                                                                                         |
+| `URL_WAIT_UNTIL`            | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`)                                                                                                                               |
 | `URL_IGNORE_HTTPS_ERRORS`   | `false` | **Insecure.** Bypass TLS certificate validation for both browser-mode (Patchright) and direct-fetch (undici) requests. Use only behind corporate MITM proxies or for local development. |
 
 ## Development
