@@ -178,7 +178,7 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
 
 | Status | Description                                                                                                           |
 | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshot` (HTML) or `screenshots` (PDF/DOCX) |
+| 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshots` (always an array, present when `screenshot=true`) |
 | 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                        |
 | 415    | Unsupported content type — the URL points to a non-HTML, non-PDF, non-DOCX resource                                   |
 | 422    | Validation error — missing or invalid `url` parameter                                                                 |
@@ -189,8 +189,9 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
 
 - Content type is auto-detected via HEAD request, with magic-byte sniffing as fallback for `application/octet-stream` responses
 - `links` contains same-domain links only (external links are excluded), resolved to absolute URLs
-- `screenshot` (singular) is a base64-encoded PNG for HTML pages, only present when `screenshot=true`
-- `screenshots` (plural) is an array of base64-encoded PNGs for PDF/DOCX pages, only present when `screenshot=true` on a PDF or DOCX URL. Defaults to one entry; raise `screenshot_pages` to render more (PDFs cap at the document length, DOCX slices the rendered HTML evenly)
+- `screenshots` is always an array of base64-encoded PNGs, only present when `screenshot=true`. Semantics depend on the source:
+  - **HTML**: exactly one entry — a single viewport capture of the rendered page. `screenshot_pages` is ignored.
+  - **PDF/DOCX**: one entry per rendered page, controlled by `screenshot_pages` (default `1`). PDFs cap at the document's actual page count; DOCX slices the rendered HTML evenly. `screenshot_height` is ignored — height is auto-calculated from the page aspect ratio.
 - `title` may be `null` (always `null` for PDFs and DOCX files)
 
 ### POST /api/upload
