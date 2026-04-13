@@ -89,12 +89,14 @@ test('url endpoint returns screenshot when screenshot=true with browser', async 
   response.assertStatus(200)
 
   const body = response.body()
-  assert.property(body, 'screenshot')
-  assert.isString(body.screenshot)
-  assert.isNotEmpty(body.screenshot)
+  assert.property(body, 'screenshots')
+  assert.isArray(body.screenshots)
+  assert.lengthOf(body.screenshots, 1)
+  assert.isString(body.screenshots[0])
+  assert.isNotEmpty(body.screenshots[0])
 })
 
-test('url endpoint does not return screenshot when screenshot is not requested', async ({
+test('url endpoint does not return screenshots when screenshot is not requested', async ({
   client,
   assert,
 }) => {
@@ -103,5 +105,5 @@ test('url endpoint does not return screenshot when screenshot is not requested',
   response.assertStatus(200)
 
   const body = response.body()
-  assert.notProperty(body, 'screenshot')
+  assert.notProperty(body, 'screenshots')
 })

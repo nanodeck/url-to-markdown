@@ -77,16 +77,9 @@ export class UrlToMarkdownResponse {
 
   @ApiProperty({
     required: false,
-    type: String,
-    description: 'Base64-encoded PNG screenshot of the page (present when screenshot=true)',
-  })
-  declare screenshot: string | null
-
-  @ApiProperty({
-    required: false,
     type: [String],
     description:
-      'Base64-encoded PNG images of each PDF page (present when screenshot=true for PDF URLs). Height is auto-calculated from page aspect ratio; screenshot_height is ignored for PDFs.',
+      'Base64-encoded PNG screenshots (present when screenshot=true). Always an array. HTML pages return exactly one entry (single viewport capture). PDF/DOCX return one entry per rendered page, controlled by screenshot_pages (default 1). For PDF/DOCX, height is auto-calculated from page aspect ratio and screenshot_height is ignored.',
   })
   declare screenshots: string[] | null
 }

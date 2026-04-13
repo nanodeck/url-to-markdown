@@ -313,7 +313,7 @@ export default class UrlController {
     }
 
     if (screenshot) {
-      result.screenshot = screenshot
+      result.screenshots = [screenshot]
     }
 
     return response.send(result)
