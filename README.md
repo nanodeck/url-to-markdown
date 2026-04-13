@@ -290,6 +290,7 @@ By default, all private/internal IP ranges are blocked. When deploying in Kubern
 | `URL_VIEWPORT_WIDTH`        | `1280`  | Default browser viewport width                            |
 | `URL_VIEWPORT_HEIGHT`       | `720`   | Default browser viewport height                           |
 | `URL_WAIT_UNTIL`            | `load`  | Wait strategy (`load`, `domcontentloaded`, `networkidle`) |
+| `URL_IGNORE_HTTPS_ERRORS`   | `false` | **Insecure.** Bypass TLS certificate validation for both browser-mode (Patchright) and direct-fetch (undici) requests. Use only behind corporate MITM proxies or for local development. |
 
 ## Development
 
