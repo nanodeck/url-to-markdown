@@ -89,7 +89,8 @@
     "brace-expansion": "^2.0.3",
     "picomatch": "^4.0.4",
     "diff": "^5.2.2",
-    "lodash-es": "^4.18.0"
+    "lodash-es": "^4.18.0",
+    "@adonisjs/http-server": "^7.8.1"
   },
   "eslintConfig": {
     "extends": "@adonisjs/eslint-config/app"
