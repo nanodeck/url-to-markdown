@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { ApiExcludeOperation } from 'openapi-metadata/decorators'
+import { ApiExcludeOperation } from '@foadonis/openapi/decorators'
 
 export default class HomeController {
   @ApiExcludeOperation()
