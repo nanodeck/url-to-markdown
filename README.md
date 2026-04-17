@@ -72,13 +72,13 @@ docker run \
 
 ## API
 
-| Method | Path          | Description                                    |
-| ------ | ------------- | ---------------------------------------------- |
-| GET    | `/`           | Landing page                                   |
-| GET    | `/health`     | Health check                                   |
-| GET    | `/api`        | OpenAPI / Scalar UI                            |
-| GET    | `/api/fetch`  | Convert URL to Markdown                        |
-| POST   | `/api/file`   | Upload a PDF/DOCX file and convert to Markdown |
+| Method | Path         | Description                                    |
+| ------ | ------------ | ---------------------------------------------- |
+| GET    | `/`          | Landing page                                   |
+| GET    | `/health`    | Health check                                   |
+| GET    | `/api`       | OpenAPI / Scalar UI                            |
+| GET    | `/api/fetch` | Convert URL to Markdown                        |
+| POST   | `/api/file`  | Upload a PDF/DOCX file and convert to Markdown |
 
 ### GET /api/fetch
 
@@ -176,14 +176,14 @@ curl 'http://localhost:3333/api/fetch?url=https://example.com/document.docx'
 
 **Response Codes**
 
-| Status | Description                                                                                                           |
-| ------ | --------------------------------------------------------------------------------------------------------------------- |
+| Status | Description                                                                                                                           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | 200    | Success — returns `url`, `title`, `markdown`, `links`, and optionally `screenshots` (always an array, present when `screenshot=true`) |
-| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                        |
-| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF, non-DOCX resource                                   |
-| 422    | Validation error — missing or invalid `url` parameter                                                                 |
-| 4xx    | Upstream non-success status forwarded from the target URL                                                             |
-| 502    | Connection failure — DNS error, timeout, or unreachable host                                                          |
+| 403    | SSRF blocked — private/internal IPs and `file:`/`data:` protocols are rejected                                                        |
+| 415    | Unsupported content type — the URL points to a non-HTML, non-PDF, non-DOCX resource                                                   |
+| 422    | Validation error — missing or invalid `url` parameter                                                                                 |
+| 4xx    | Upstream non-success status forwarded from the target URL                                                                             |
+| 502    | Connection failure — DNS error, timeout, or unreachable host                                                                          |
 
 **Notes**
 
