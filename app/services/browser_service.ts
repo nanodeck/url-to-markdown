@@ -104,10 +104,7 @@ export class BrowserService {
       const finalUrl = page.url()
 
       if (strictSameHost && finalUrl !== url && !isSameHost(finalUrl, url)) {
-        throw new SsrfRedirectError(
-          finalUrl,
-          `Redirect to different host blocked: ${finalUrl}`
-        )
+        throw new SsrfRedirectError(finalUrl, `Redirect to different host blocked: ${finalUrl}`)
       }
 
       const html = await page.content()
