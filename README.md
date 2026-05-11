@@ -345,10 +345,13 @@ All config is env-driven. See `.env.example` for available settings.
 
 | Variable             | Default | Description                                                                                   |
 | -------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| `SSRF_ALLOWED_CIDRS` | —       | Comma-separated CIDRs to exempt from private-IP blocking (e.g., `10.96.0.0/12,10.244.0.0/16`) |
-| `SSRF_ALLOWED_HOSTS` | —       | Comma-separated hostnames to exempt from SSRF checks (e.g., `pdf-store.ns.svc.cluster.local`) |
+| `SSRF_ALLOWED_CIDRS`            | —       | Comma-separated CIDRs to exempt from private-IP blocking (e.g., `10.96.0.0/12,10.244.0.0/16`) |
+| `SSRF_ALLOWED_HOSTS`            | —       | Comma-separated hostnames to exempt from SSRF checks (e.g., `pdf-store.ns.svc.cluster.local`) |
+| `URL_STRICT_REDIRECT_SAME_HOST` | `false` | When `true`, reject redirects that change host. Returns `403` if the final URL's host differs from the requested one. |
 
 By default, all private/internal IP ranges are blocked. When deploying in Kubernetes, cluster service IPs often fall in private ranges (e.g., `10.96.0.0/12`). Use these env vars to allow access to trusted internal services while keeping SSRF protection for everything else. Protocol blocks (`file:`, `data:`, `ftp:`, `gopher:`) are never bypassed by allowlists.
+
+`URL_STRICT_REDIRECT_SAME_HOST` is off by default to preserve existing behavior (cross-host redirects are followed). Enable it when callers must only fetch content from the host they explicitly requested.
 
 ### Browser / Fetch
 
