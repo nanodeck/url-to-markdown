@@ -1,6 +1,7 @@
 import type { PdfConverter } from './pdf_converters/pdf_converter.js'
 import { Pdf2mdConverter } from './pdf_converters/pdf2md_converter.js'
 import pdfScreenshotService from './pdf_screenshot_service.js'
+import { isSameHost } from './url_guard_service.js'
 
 export type PdfConvertOptions = {
   screenshot?: boolean
@@ -35,7 +36,10 @@ export class PdfService {
 
   async fetchAndConvert(
     url: string,
-    options: PdfConvertOptions & { validateUrl: (url: string) => Promise<string | null> }
+    options: PdfConvertOptions & {
+      validateUrl: (url: string) => Promise<string | null>
+      strictSameHost?: boolean
+    }
   ): Promise<PdfConvertResult> {
     const res = await fetch(url, {
       headers: {
@@ -51,6 +55,9 @@ export class PdfService {
     }
 
     if (res.url !== url) {
+      if (options.strictSameHost && !isSameHost(res.url, url)) {
+        throw new Error(`Redirect target blocked: cross-host redirect to ${res.url}`)
+      }
       const guardError = await options.validateUrl(res.url)
       if (guardError) {
         throw new Error(`Redirect target blocked: ${guardError}`)

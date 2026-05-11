@@ -35,6 +35,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   URL_VIEWPORT_HEIGHT: Env.schema.number.optional(),
   URL_WAIT_UNTIL: Env.schema.enum.optional(['load', 'domcontentloaded', 'networkidle'] as const),
   URL_IGNORE_HTTPS_ERRORS: Env.schema.boolean.optional(),
+  URL_STRICT_REDIRECT_SAME_HOST: Env.schema.boolean.optional(),
 
   SSRF_ALLOWED_CIDRS: Env.schema.string.optional(),
   SSRF_ALLOWED_HOSTS: Env.schema.string.optional(),
