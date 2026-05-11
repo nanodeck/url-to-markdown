@@ -2,6 +2,7 @@ import type { DocxConverter } from './docx_converters/docx_converter.js'
 import { MammothConverter } from './docx_converters/mammoth_converter.js'
 import markdownService from './markdown_service.js'
 import docxScreenshotService from './docx_screenshot_service.js'
+import { isSameHost } from './url_guard_service.js'
 
 export type DocxConvertOptions = {
   screenshot?: boolean
@@ -37,7 +38,10 @@ export class DocxService {
 
   async fetchAndConvert(
     url: string,
-    options: DocxConvertOptions & { validateUrl: (url: string) => Promise<string | null> }
+    options: DocxConvertOptions & {
+      validateUrl: (url: string) => Promise<string | null>
+      strictSameHost?: boolean
+    }
   ): Promise<DocxConvertResult> {
     const res = await fetch(url, {
       headers: {
@@ -53,6 +57,9 @@ export class DocxService {
     }
 
     if (res.url !== url) {
+      if (options.strictSameHost && !isSameHost(res.url, url)) {
+        throw new Error(`Redirect target blocked: cross-host redirect to ${res.url}`)
+      }
       const guardError = await options.validateUrl(res.url)
       if (guardError) {
         throw new Error(`Redirect target blocked: ${guardError}`)
