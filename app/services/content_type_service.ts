@@ -72,10 +72,7 @@ export class ContentTypeService {
 
       if (res.url !== url) {
         if (options?.strictSameHost && !isSameHost(res.url, url)) {
-          throw new SsrfRedirectError(
-            res.url,
-            `Redirect to different host blocked: ${res.url}`
-          )
+          throw new SsrfRedirectError(res.url, `Redirect to different host blocked: ${res.url}`)
         }
         if (options?.validateUrl) {
           const guardError = await options.validateUrl(res.url)

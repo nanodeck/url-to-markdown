@@ -379,10 +379,7 @@ export default class UrlController {
       })
 
       if (strictSameHost && res.url !== url && !isSameHost(res.url, url)) {
-        logger.info(
-          { url, finalUrl: res.url },
-          'url:blocked cross-host redirect (strictSameHost)'
-        )
+        logger.info({ url, finalUrl: res.url }, 'url:blocked cross-host redirect (strictSameHost)')
         return {
           error: `Redirect to different host blocked: ${res.url}`,
           status: 403,
