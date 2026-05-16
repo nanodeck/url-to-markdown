@@ -2,8 +2,8 @@
 
 ## Testing
 
-- [ ] `npm test`
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
+- [ ] `pnpm test`
+- [ ] `pnpm lint`
+- [ ] `pnpm typecheck`
 
 ## Notes

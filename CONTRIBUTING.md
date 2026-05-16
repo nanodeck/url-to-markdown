@@ -4,34 +4,34 @@ Thanks for helping improve URL to Markdown. This guide covers how to set up the 
 
 ## Prerequisites
 
-- Node.js 20+ (or the version specified by your environment)
-- npm (or your preferred package manager)
+- Node.js 24+ (see `.node-version`)
+- pnpm 10+ (run `corepack enable` to use the version pinned in `package.json`)
 
-If Playwright browsers are missing, install Chromium:
+If Patchright browsers are missing, install Chromium:
 
 ```bash
-npx playwright install chromium
+pnpm exec patchright install chromium
 ```
 
 ## Setup
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env
 ```
 
 ## Run the App
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## Run Checks
 
 ```bash
-npm run lint
-npm test
-npm run typecheck
+pnpm lint
+pnpm test
+pnpm typecheck
 ```
 
 ## Pull Requests
