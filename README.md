@@ -367,12 +367,12 @@ By default, all private/internal IP ranges are blocked. When deploying in Kubern
 ## Development
 
 ```bash
-npm run dev          # Start development server with hot reload
-npm run build        # Build for production
-npm start            # Run production server
-npm test             # Run all tests
-npm run lint         # ESLint
-npm run typecheck    # TypeScript check
+pnpm dev             # Start development server with hot reload
+pnpm build           # Build for production
+pnpm start           # Run production server
+pnpm test            # Run all tests
+pnpm lint            # ESLint
+pnpm typecheck       # TypeScript check
 ```
 
 ## Also by Nanodeck

@@ -1,0 +1,13 @@
+minimumReleaseAge: 10080
+resolutionMode: highest
+minimumReleaseAgeExclude:
+  - '@nanodeck/*'
+
+dangerouslyAllowAllBuilds: false
+
+allowBuilds:
+  '@napi-rs/canvas': true
+  '@swc/core': true
+  esbuild: true
+  patchright: true
+  unrs-resolver: true

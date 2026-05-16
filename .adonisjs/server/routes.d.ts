@@ -18,7 +18,8 @@ export type ScannedRoutes = {
     'openapi.json': { paramsTuple?: []; params?: {} }
     'openapi.yaml': { paramsTuple?: []; params?: {} }
   }
-  POST: {}
+  POST: {
+  }
 }
 declare module '@adonisjs/core/types/http' {
   export interface RoutesList extends ScannedRoutes {}

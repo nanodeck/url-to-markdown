@@ -22,21 +22,52 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - run: npx patchright install chromium --with-deps
+      - name: Reject non-registry dependencies
+        run: |
+          set -euo pipefail
+          if grep -nE "^\s+(tarball:\s+https?://|repo:|type:\s*(git|directory|file))" pnpm-lock.yaml; then
+            echo "::error::pnpm-lock.yaml contains non-registry resolutions (git/tarball/file/directory deps are not allowed)"
+            exit 1
+          fi
+          # Resolutions must come from the official npm registry
+          if grep -nE "^\s+resolved:\s+https?://" pnpm-lock.yaml | grep -vE "registry\.npmjs\.org"; then
+            echo "::error::pnpm-lock.yaml contains resolutions from registries other than registry.npmjs.org"
+            exit 1
+          fi
 
-      - run: npm run lint
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high --prod
 
-      - run: npm run typecheck
+      - name: Cache Patchright browsers
+        uses: actions/cache@v4
+        id: patchright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: patchright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Patchright browsers
+        if: steps.patchright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec patchright install chromium --with-deps
+
+      - name: Install Patchright system deps
+        if: steps.patchright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec patchright install-deps chromium
+
+      - run: pnpm run lint
+
+      - run: pnpm run typecheck
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
         env:
           APP_KEY: testtesttesttesttest
           NODE_ENV: test
@@ -82,10 +113,12 @@ jobs:
         with:
           context: .
           push: true
+          pull: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          no-cache: true
+          cache-from: type=gha,scope=docker-${{ github.ref_name }}
+          cache-to: type=gha,mode=max,scope=docker-${{ github.ref_name }}
 
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@master

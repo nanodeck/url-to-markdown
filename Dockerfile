@@ -1,18 +1,25 @@
+# syntax=docker/dockerfile:1.6
 FROM node:24-alpine AS deps
 WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-    PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1
-COPY package.json package-lock.json .npmrc ./
-RUN npm ci --omit=dev
+    PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    npm_config_store_dir=/pnpm-store
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
+    pnpm install --frozen-lockfile --prod
 
 FROM node:24-alpine AS build
 WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-    PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1
-COPY package.json package-lock.json .npmrc ./
-RUN npm ci
+    PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    npm_config_store_dir=/pnpm-store
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
+    pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-bookworm-slim AS fonts
 RUN sed -i 's/^Components: main$/Components: main contrib/' /etc/apt/sources.list.d/debian.sources \

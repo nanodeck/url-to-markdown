@@ -22,7 +22,6 @@ export class PdfScreenshotService {
     const doc = await getDocument({
       data: buffer.slice(),
       useSystemFonts: true,
-      isEvalSupported: false,
     }).promise
 
     const screenshots: string[] = []
