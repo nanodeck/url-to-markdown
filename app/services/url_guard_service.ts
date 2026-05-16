@@ -74,6 +74,14 @@ function ipToInt(ip: string): number {
   )
 }
 
+export function isSameHost(a: string, b: string): boolean {
+  try {
+    return new URL(a).host.toLowerCase() === new URL(b).host.toLowerCase()
+  } catch {
+    return false
+  }
+}
+
 function parseCommaSeparated(value: string | undefined): string[] {
   if (!value) return []
   return value

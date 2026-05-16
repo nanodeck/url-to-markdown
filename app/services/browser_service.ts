@@ -1,6 +1,8 @@
 import env from '#start/env'
 import { chromium, type Browser } from 'patchright'
 import { stealthScript, CHROME_UA } from '#services/stealth'
+import { isSameHost } from '#services/url_guard_service'
+import { SsrfRedirectError } from '#services/content_type_service'
 
 export type ScreenshotOptions = {
   width: number
@@ -63,7 +65,8 @@ export class BrowserService {
   async fetchPage(
     url: string,
     screenshot?: ScreenshotOptions,
-    shadow?: boolean
+    shadow?: boolean,
+    strictSameHost?: boolean
   ): Promise<FetchResult> {
     const browser = await this.getBrowser()
     const page = await browser.newPage({
@@ -98,8 +101,13 @@ export class BrowserService {
       }
 
       const status = response?.status() ?? 0
-      const html = await page.content()
       const finalUrl = page.url()
+
+      if (strictSameHost && finalUrl !== url && !isSameHost(finalUrl, url)) {
+        throw new SsrfRedirectError(finalUrl, `Redirect to different host blocked: ${finalUrl}`)
+      }
+
+      const html = await page.content()
 
       let screenshotBase64: string | null = null
       if (screenshot) {

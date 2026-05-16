@@ -12,10 +12,11 @@ import {
 import browserService, { type ScreenshotOptions } from '#services/browser_service'
 import readabilityService from '#services/readability_service'
 import markdownService from '#services/markdown_service'
-import urlGuardService from '#services/url_guard_service'
+import urlGuardService, { isSameHost } from '#services/url_guard_service'
 import contentTypeService, { SsrfRedirectError } from '#services/content_type_service'
 import pdfService from '#services/pdf_service'
 import docxService from '#services/docx_service'
+import env from '#start/env'
 
 export default class UrlController {
   @ApiTags('Fetch')
@@ -111,10 +112,14 @@ export default class UrlController {
     const startedAt = Date.now()
 
     const validateUrl = urlGuardService.validate.bind(urlGuardService)
+    const strictSameHost = env.get('URL_STRICT_REDIRECT_SAME_HOST', false)
 
     let contentType: string | null
     try {
-      contentType = await contentTypeService.detect(payload.url, { validateUrl })
+      contentType = await contentTypeService.detect(payload.url, {
+        validateUrl,
+        strictSameHost,
+      })
     } catch (error) {
       if (error instanceof SsrfRedirectError) {
         logger.info(
@@ -143,6 +148,7 @@ export default class UrlController {
         screenshot: !!payload.screenshot,
         screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
         screenshotPages: payload.screenshot_pages,
+        strictSameHost,
       })
     }
 
@@ -151,10 +157,11 @@ export default class UrlController {
         screenshot: !!payload.screenshot,
         screenshotWidth: payload.screenshot_width ?? SCREENSHOT_DEFAULT_WIDTH,
         screenshotPages: payload.screenshot_pages,
+        strictSameHost,
       })
     }
 
-    return this.handleHtml(payload, startedAt, response, logger)
+    return this.handleHtml(payload, startedAt, response, logger, strictSameHost)
   }
 
   private async handlePdf(
@@ -162,7 +169,12 @@ export default class UrlController {
     startedAt: number,
     response: HttpContext['response'],
     logger: Logger,
-    options?: { screenshot?: boolean; screenshotWidth?: number; screenshotPages?: number }
+    options?: {
+      screenshot?: boolean
+      screenshotWidth?: number
+      screenshotPages?: number
+      strictSameHost?: boolean
+    }
   ) {
     try {
       const result = await pdfService.fetchAndConvert(url, {
@@ -170,6 +182,7 @@ export default class UrlController {
         screenshotWidth: options?.screenshotWidth,
         screenshotPages: options?.screenshotPages,
         validateUrl: urlGuardService.validate.bind(urlGuardService),
+        strictSameHost: options?.strictSameHost,
       })
 
       logger.info(
@@ -206,7 +219,12 @@ export default class UrlController {
     startedAt: number,
     response: HttpContext['response'],
     logger: Logger,
-    options?: { screenshot?: boolean; screenshotWidth?: number; screenshotPages?: number }
+    options?: {
+      screenshot?: boolean
+      screenshotWidth?: number
+      screenshotPages?: number
+      strictSameHost?: boolean
+    }
   ) {
     try {
       const result = await docxService.fetchAndConvert(url, {
@@ -214,6 +232,7 @@ export default class UrlController {
         screenshotWidth: options?.screenshotWidth,
         screenshotPages: options?.screenshotPages,
         validateUrl: urlGuardService.validate.bind(urlGuardService),
+        strictSameHost: options?.strictSameHost,
       })
 
       logger.info(
@@ -257,7 +276,8 @@ export default class UrlController {
     },
     startedAt: number,
     response: HttpContext['response'],
-    logger: Logger
+    logger: Logger,
+    strictSameHost: boolean
   ) {
     const screenshotOpts = this.buildScreenshotOptions(
       !!payload.screenshot,
@@ -276,7 +296,8 @@ export default class UrlController {
       useBrowser,
       screenshotOpts,
       logger,
-      payload.shadow
+      payload.shadow,
+      strictSameHost
     )
     if ('error' in fetchResult) {
       return response.status(fetchResult.status).send(fetchResult)
@@ -338,14 +359,15 @@ export default class UrlController {
     useBrowser: boolean,
     screenshot: ScreenshotOptions | undefined,
     logger: Logger,
-    shadow?: boolean
+    shadow?: boolean,
+    strictSameHost?: boolean
   ): Promise<
     | { html: string; status: number; finalUrl: string; screenshot: string | null }
     | { error: string; status: number }
   > {
     try {
       if (useBrowser) {
-        return await browserService.fetchPage(url, screenshot, shadow)
+        return await browserService.fetchPage(url, screenshot, shadow, strictSameHost)
       }
 
       const res = await fetch(url, {
@@ -356,9 +378,24 @@ export default class UrlController {
         redirect: 'follow',
       })
 
+      if (strictSameHost && res.url !== url && !isSameHost(res.url, url)) {
+        logger.info({ url, finalUrl: res.url }, 'url:blocked cross-host redirect (strictSameHost)')
+        return {
+          error: `Redirect to different host blocked: ${res.url}`,
+          status: 403,
+        }
+      }
+
       const html = await res.text()
       return { html, status: res.status, finalUrl: res.url, screenshot: null }
     } catch (error) {
+      if (error instanceof SsrfRedirectError) {
+        logger.info(
+          { url, blockedUrl: error.blockedUrl },
+          'url:blocked cross-host redirect (browser)'
+        )
+        return { error: error.message, status: 403 }
+      }
       const message = error instanceof Error ? error.message : 'Failed to fetch URL'
       logger.info({ err: error, url, message }, 'url:fetch failed')
       return { error: `Failed to fetch URL: ${message}`, status: 502 }

@@ -1,8 +1,13 @@
+import { isSameHost } from '#services/url_guard_service'
+
 export type ContentCategory = 'html' | 'pdf' | 'docx' | 'unsupported'
 
 export class SsrfRedirectError extends Error {
-  constructor(public readonly blockedUrl: string) {
-    super(`Redirect target blocked by SSRF guard: ${blockedUrl}`)
+  constructor(
+    public readonly blockedUrl: string,
+    reason?: string
+  ) {
+    super(reason ?? `Redirect target blocked by SSRF guard: ${blockedUrl}`)
     this.name = 'SsrfRedirectError'
   }
 }
@@ -50,7 +55,10 @@ export class ContentTypeService {
 
   async detect(
     url: string,
-    options?: { validateUrl?: (url: string) => Promise<string | null> }
+    options?: {
+      validateUrl?: (url: string) => Promise<string | null>
+      strictSameHost?: boolean
+    }
   ): Promise<string | null> {
     try {
       const res = await fetch(url, {
@@ -62,10 +70,15 @@ export class ContentTypeService {
         signal: AbortSignal.timeout(10_000),
       })
 
-      if (options?.validateUrl && res.url !== url) {
-        const guardError = await options.validateUrl(res.url)
-        if (guardError) {
-          throw new SsrfRedirectError(res.url)
+      if (res.url !== url) {
+        if (options?.strictSameHost && !isSameHost(res.url, url)) {
+          throw new SsrfRedirectError(res.url, `Redirect to different host blocked: ${res.url}`)
+        }
+        if (options?.validateUrl) {
+          const guardError = await options.validateUrl(res.url)
+          if (guardError) {
+            throw new SsrfRedirectError(res.url)
+          }
         }
       }
 
@@ -73,7 +86,7 @@ export class ContentTypeService {
       const mimeType = contentType?.split(';')[0].trim().toLowerCase()
 
       if (mimeType === 'application/octet-stream' && contentType) {
-        return await this.refineOctetStream(url, contentType)
+        return await this.refineOctetStream(url, contentType, options?.strictSameHost)
       }
 
       return contentType
@@ -83,7 +96,11 @@ export class ContentTypeService {
     }
   }
 
-  private async refineOctetStream(url: string, originalContentType: string): Promise<string> {
+  private async refineOctetStream(
+    url: string,
+    originalContentType: string,
+    strictSameHost?: boolean
+  ): Promise<string> {
     const ext = this.extractExtension(url)
     if (ext && ext in EXTENSION_MIME_MAP) {
       return EXTENSION_MIME_MAP[ext]
@@ -100,13 +117,18 @@ export class ContentTypeService {
         signal: AbortSignal.timeout(10_000),
       })
 
+      if (strictSameHost && res.url !== url && !isSameHost(res.url, url)) {
+        throw new SsrfRedirectError(res.url, `Redirect to different host blocked: ${res.url}`)
+      }
+
       const buffer = new Uint8Array(await res.arrayBuffer())
       for (const { mime, bytes } of MAGIC_BYTES) {
         if (bytes.every((b, i) => buffer[i] === b)) {
           return mime
         }
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof SsrfRedirectError) throw error
       // fall through
     }
 
