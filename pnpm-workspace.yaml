@@ -11,3 +11,6 @@ allowBuilds:
   esbuild: true
   patchright: true
   unrs-resolver: true
+
+overrides:
+  lodash-es: ^4.18.0
