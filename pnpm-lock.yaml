@@ -62,6 +62,9 @@ importers:
       undici:
         specifier: ^8.0.2
         version: 8.2.0
+      unpdf:
+        specifier: ^1.6.0
+        version: 1.6.2(@napi-rs/canvas@0.1.100)
     devDependencies:
       '@adonisjs/assembler':
         specifier: ^8.4.0
