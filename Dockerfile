@@ -1,22 +1,26 @@
 # syntax=docker/dockerfile:1.6
 FROM node:24-alpine AS deps
+ARG TARGETPLATFORM
 WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     npm_config_store_dir=/pnpm-store
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
+# Scope the pnpm cache mount per target platform so parallel amd64/arm64
+# multi-arch builds don't compete for the same content-addressed store.
+RUN --mount=type=cache,id=pnpm-store-${TARGETPLATFORM},target=/pnpm-store \
     pnpm install --frozen-lockfile --prod
 
 FROM node:24-alpine AS build
+ARG TARGETPLATFORM
 WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     npm_config_store_dir=/pnpm-store
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
+RUN --mount=type=cache,id=pnpm-store-${TARGETPLATFORM},target=/pnpm-store \
     pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build
