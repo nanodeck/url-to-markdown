@@ -2,6 +2,7 @@ import { test } from '@japa/runner'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { PdfScreenshotService } from '#services/pdf_screenshot_service'
+import { Pdf2mdConverter } from '#services/pdf_converters/pdf2md_converter'
 
 const PDF_FIXTURE = join(import.meta.dirname, '..', 'files', 'file-example_PDF_1MB.pdf')
 
@@ -67,4 +68,22 @@ test.group('PdfScreenshotService', () => {
       await service.render(garbage)
     })
   })
+
+  // Regression: the upload endpoint runs the markdown converter (unpdf-backed)
+  // BEFORE rendering screenshots. unpdf bundles its own pdfjs build, and once
+  // it was loaded into the process, using a separately-imported pdfjs-dist
+  // here used to throw "API version X does not match the Worker version Y".
+  // This test exercises the same order in isolation so the regression is
+  // caught at the unit level instead of only via the functional upload test.
+  test('renders a screenshot after the markdown converter has run', async ({ assert }) => {
+    const buffer = new Uint8Array(await readFile(PDF_FIXTURE))
+
+    const markdown = await new Pdf2mdConverter().convert(buffer)
+    assert.isString(markdown)
+
+    const screenshots = await new PdfScreenshotService().render(buffer)
+    assert.lengthOf(screenshots, 1)
+    const decoded = Buffer.from(screenshots[0], 'base64')
+    assert.deepEqual([...decoded.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47])
+  }).timeout(60_000)
 })
