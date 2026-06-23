@@ -28,7 +28,7 @@ test('url endpoint returns 422 for invalid url', async ({ client }) => {
 })
 
 test('url endpoint forwards upstream non-success status', async ({ client, assert }) => {
-  const response = await client.get('/api/fetch').qs({ url: 'https://httpbingo.org/status/404' })
+  const response = await client.get('/api/fetch').qs({ url: 'https://eu.httpbin.org/status/404' })
 
   response.assertStatus(404)
 
