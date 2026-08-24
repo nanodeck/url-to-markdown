@@ -40,7 +40,7 @@ export class PdfScreenshotService {
         screenshots.push(base64)
       }
     } finally {
-      doc.destroy()
+      await doc.loadingTask.destroy()
     }
 
     return screenshots
