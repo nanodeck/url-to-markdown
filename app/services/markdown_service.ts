@@ -12,6 +12,10 @@ export class MarkdownService {
     })
 
     this.turndown.use(gfm)
+
+    // Turndown emits the raw text of these elements as markdown, which leaks
+    // inline JavaScript and CSS into the output for non-Readability code paths.
+    this.turndown.remove(['script', 'style', 'noscript', 'template', 'iframe'])
   }
 
   convert(html: string): string {
