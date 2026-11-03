@@ -55,7 +55,7 @@
     "youch": "^4.1.1"
   },
   "dependencies": {
-    "@adonisjs/core": "^7.4.0",
+    "@adonisjs/core": "^7.6.0",
     "@adonisjs/limiter": "^3.0.1",
     "@foadonis/openapi": "^1.1.0",
     "@mozilla/readability": "^0.6.0",
@@ -67,11 +67,11 @@
     "linkedom": "^0.18.13",
     "lodash": "^4.18.1",
     "luxon": "^3.7.2",
-    "mammoth": "^1.12.1",
+    "mammoth": "^1.13.0",
     "patchright": "^1.61.1",
     "reflect-metadata": "^0.2.2",
     "turndown": "^7.2.4",
-    "undici": "^8.10.0",
+    "undici": "^8.12.3",
     "unpdf": "^1.8.1"
   },
   "hotHook": {
